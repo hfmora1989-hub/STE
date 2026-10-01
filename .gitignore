@@ -3,3 +3,4 @@ node_modules/
 *.xls
 data.b64
 *.png
+*.bundle
