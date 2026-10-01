@@ -1,0 +1,1162 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Consulta beneficiarios STE</title>
+<style>
+:root{
+  /* Paleta Consorcio Movi Escolar 25: azul #3A72AB, naranja #E39A48, coral #CB4F3E */
+  --brand-blue:#2F6BA8; --brand-blue-dk:#1F4E7E; --brand-orange:#E39A48; --brand-red:#CB4F3E;
+  --bg:#F3F6FA; --panel:#ffffff; --ink:#1A2B40; --muted:#5A6B80; --line:#DCE4EE; --soft:#E9F0F8;
+  --accent:#2F6BA8; --accent-ink:#ffffff;
+  --ok:#2E7D5B; --ok-bg:#E3F3EB; --bad:#B8402F; --bad-bg:#FBE9E6; --warn:#A8620F; --warn-bg:#FDF0E1;
+  --info:#2F5E8E; --info-bg:#E6EEF7;
+  --shadow:0 1px 2px rgba(31,78,126,.06),0 2px 6px rgba(31,78,126,.07);
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0F1722; --panel:#16212F; --ink:#E6EDF5; --muted:#9DB0C6; --line:#263547; --soft:#1C2A3B;
+    --accent:#6FA3DA; --accent-ink:#0B1420; --brand-blue-dk:#6FA3DA;
+    --ok:#6ACB9C; --ok-bg:#163126; --bad:#F08A7C; --bad-bg:#3A1C18; --warn:#F2B66E; --warn-bg:#3A2A14;
+    --info:#A9C4E2; --info-bg:#1E2E42; --shadow:none; }
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 "Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
+header.top{background:var(--panel);border-bottom:1px solid var(--line);padding:12px 24px;display:flex;gap:16px;align-items:center;flex-wrap:wrap;position:relative}
+header.top::after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:4px;background:linear-gradient(90deg,var(--brand-blue) 0 60%,var(--brand-orange) 60% 80%,var(--brand-red) 80% 100%)}
+header.top .logo{height:68px;width:auto;background:#fff;border-radius:10px;padding:4px 6px;flex:none}
+header.top h1{color:var(--brand-blue-dk)}
+header.top > div{flex:1;min-width:260px}
+header.top h1{font-size:18px;margin:0;font-weight:650;letter-spacing:-.01em}
+header.top .sub{color:var(--muted);font-size:12.5px}
+header.top .spacer{flex:1}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 14px}
+button:hover{background:var(--soft)}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+button.primary:hover{filter:brightness(1.07)}
+main{max-width:1200px;margin:0 auto;padding:20px 24px 60px}
+.search{display:flex;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:var(--shadow)}
+.search label{font-weight:600;white-space:nowrap}
+.search input{flex:1;min-width:120px;font:inherit;font-size:16px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+.search input:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.hint{color:var(--muted);font-size:12.5px;margin:8px 4px 0}
+.msg{margin-top:16px;padding:14px 16px;border-radius:10px;background:var(--info-bg);color:var(--info)}
+.msg.bad{background:var(--bad-bg);color:var(--bad)}
+section.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-top:16px;box-shadow:var(--shadow)}
+section.card h2{font-size:15px;margin:0 0 12px;font-weight:650;color:var(--brand-blue-dk);display:flex;align-items:center;gap:8px}
+section.card h2 .count{font-weight:500;color:var(--muted);font-size:13px}
+.who{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.who .name{font-size:20px;font-weight:650;letter-spacing:-.01em}
+.who .doc{color:var(--muted);margin-top:2px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px 22px;margin-top:14px}
+.fact .k{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.fact .v{font-weight:550}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-top:16px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-top:3px solid var(--brand-blue);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+.kpi .k{font-size:12px;color:var(--muted)}
+.kpi .chip{white-space:normal}
+.kpi .v{font-size:22px;font-weight:650;margin-top:4px;letter-spacing:-.01em}
+.kpis .kpi:nth-child(5n+2){border-top-color:var(--brand-orange)} .kpis .kpi:nth-child(5n+3){border-top-color:var(--brand-red)}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+.chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:600;white-space:nowrap}
+.chip.ok{background:var(--ok-bg);color:var(--ok)}
+.chip.bad{background:var(--bad-bg);color:var(--bad)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}
+.chip.info{background:var(--info-bg);color:var(--info)}
+.cycles{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+.cyc{border:1px solid var(--line);border-radius:10px;padding:12px 14px;background:var(--bg)}
+.cyc .t{font-weight:650;display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.cyc .d{margin-top:8px;font-size:13px;color:var(--muted)}
+.cyc .d b{color:var(--ink);font-weight:600}
+.cyc.ok{border-left:4px solid var(--ok)} .cyc.bad{border-left:4px solid var(--bad)} .cyc.warn{border-left:4px solid var(--warn)} .cyc.info{border-left:4px solid var(--line)}
+.tablewrap{overflow-x:auto;margin-top:14px;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:600;font-size:12px;color:var(--brand-blue-dk);white-space:nowrap;position:sticky;top:0}
+td.lote{white-space:nowrap}
+td.nopay{color:var(--muted);text-decoration:line-through}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr:last-child td{border-bottom:none}
+tr.det td{background:var(--bg);font-size:12.5px}
+tr.main{cursor:pointer} tr.main:hover td{background:var(--soft)}
+.obs{max-width:420px}
+.obs .why{color:var(--bad);font-weight:600}
+.obs .more{color:var(--muted)}
+.dl{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:6px 20px}
+.dl div span{color:var(--muted)}
+.visits{display:grid;gap:12px}
+.visit{border:1px solid var(--line);border-radius:10px;padding:14px 16px;background:var(--bg)}
+.visit .head{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.visit .head .num{font-weight:650}
+.visit .head .when{color:var(--muted)}
+.visit .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px 18px;margin-top:10px}
+.visit .grid .k{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.visit .grid .v{font-weight:550}
+.visit .text{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+.visit .text .k{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.empty{color:var(--muted);font-style:italic}
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--panel);color:var(--ink);padding:0;width:min(860px,94vw);max-height:92vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.25)}
+dialog::backdrop{background:rgba(10,14,20,.45)}
+.dlg-h{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center}
+.dlg-h h3{margin:0;font-size:16px;flex:1}
+.dlg-b{padding:16px 20px}
+.dlg-b ul{padding-left:18px;margin:6px 0 14px}
+.dlg-b li{margin:3px 0}
+.drop{border:2px dashed var(--line);border-radius:10px;padding:18px;text-align:center;color:var(--muted);margin-top:8px}
+.drop.on{border-color:var(--accent);color:var(--accent)}
+.log{margin-top:12px;font-size:12.5px;max-height:160px;overflow:auto;white-space:pre-wrap;color:var(--muted)}
+.row-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap}
+.loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:10;flex-direction:column;gap:10px;color:var(--muted)}
+.spin{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:s 1s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+
+
+.dlg-intro{margin:0 0 12px;color:var(--muted);font-size:13px}
+.slots{display:grid;gap:12px}
+.slot{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--bg)}
+.slot-h{display:flex;gap:12px;align-items:flex-start}
+.slot-t{flex:1;min-width:0}
+.slot-t .desc{font-size:12.5px;color:var(--muted);margin-top:2px}
+.stepn{flex:none;width:26px;height:26px;border-radius:50%;background:var(--brand-blue);color:#fff;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px}
+.slot-st{flex:none}
+.slot table{margin-top:10px;font-size:12.5px;background:var(--panel)}
+.slot .tablewrap{margin-top:10px}
+.slot .tablewrap table{margin-top:0}
+.slot .none{margin:10px 0 0;font-size:12.5px;color:var(--muted);font-style:italic}
+.slot .warnline{margin-top:8px;font-size:12.5px;color:var(--warn)}
+.btn-file{display:inline-block;margin-top:10px;cursor:pointer;border-radius:8px;border:1px solid var(--accent);color:var(--accent);background:var(--panel);padding:6px 12px;font-weight:600;font-size:13px}
+.btn-file:hover{background:var(--soft)}
+button.mini{padding:3px 9px;font-size:12px}
+.drop{display:block;margin-top:14px}
+/* mapa */
+.mapwrap{position:relative}
+#map{height:400px;border-radius:10px;border:1px solid var(--line);background:#e8edf2;z-index:0}
+.maptools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.maplegend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.maplegend i{display:inline-block;width:12px;height:12px;margin-right:5px;vertical-align:-1px;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+.pin{width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center}
+.pin span{transform:rotate(45deg);color:#fff;font-weight:700;font-size:12px}
+.pin.pay{background:#2F6BA8} .pin.nopay{background:#CB4F3E}
+.pin-sede{width:26px;height:26px;border-radius:6px;background:#E39A48;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;color:#1A2B40;font-weight:800;font-size:12px}
+.leaflet-popup-content{font:13px/1.45 "Segoe UI",system-ui,sans-serif;color:#1A2B40}
+.leaflet-container a.leaflet-popup-close-button{color:#555}
+.mapinfo{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 20px;margin-top:12px}
+.mapinfo .k{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.mapinfo .v{font-weight:550}
+/* ---------- navegación ---------- */
+:root{ --c-pay:#2F6BA8; --c-nopay:#CB4F3E; --grid:#E4EAF1; }
+@media (prefers-color-scheme: dark){ :root{ --c-pay:#4F8AC9; --c-nopay:#E06A57; --grid:#223246; } }
+nav.tabs{background:var(--panel);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+nav.tabs .in{max-width:1200px;margin:0 auto;padding:0 24px;display:flex;gap:4px;overflow-x:auto}
+nav.tabs button{border:none;border-radius:0;background:none;padding:13px 16px 11px;color:var(--muted);font-weight:600;border-bottom:3px solid transparent;white-space:nowrap}
+nav.tabs button:hover{background:var(--soft);color:var(--ink)}
+nav.tabs button[aria-selected="true"]{color:var(--brand-blue-dk);border-bottom-color:var(--brand-orange)}
+.view[hidden]{display:none}
+/* ---------- información general ---------- */
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:16px}
+.info-grid section.card{margin-top:0}
+.info p{margin:0 0 10px} .info ul{margin:0 0 10px;padding-left:20px} .info li{margin:4px 0}
+.info table{font-size:13px} .info .tablewrap{margin-top:6px}
+.lead{font-size:15px;max-width:900px}
+.steps{counter-reset:st;list-style:none;padding:0!important}
+.steps li{counter-increment:st;position:relative;padding-left:34px;margin:10px 0!important}
+.steps li::before{content:counter(st);position:absolute;left:0;top:-1px;width:24px;height:24px;border-radius:50%;background:var(--brand-blue);color:#fff;font-weight:700;font-size:12.5px;display:flex;align-items:center;justify-content:center}
+/* ---------- tablero ---------- */
+.filters{display:flex;flex-wrap:wrap;gap:12px 18px;align-items:flex-end;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;box-shadow:var(--shadow)}
+.filters .f{display:flex;flex-direction:column;gap:4px}
+.filters .f > span{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);font-weight:600}
+.filters select,.filters input{font:inherit;padding:7px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink);min-width:150px}
+.filters select#fLoc{min-width:220px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:none;border-radius:0;padding:7px 12px;background:var(--bg);color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--brand-blue);color:#fff}
+.filters .note{flex-basis:100%;font-size:12.5px;color:var(--muted)}
+.dash-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:16px}
+.dash-grid section.card{margin-top:0}
+.dash-grid .wide{grid-column:1/-1}
+.card .sub2{color:var(--muted);font-size:12.5px;margin:-6px 0 12px}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:0 0 10px}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.sw-pay{background:var(--c-pay)} .sw-nopay{background:var(--c-nopay)}
+/* barras horizontales */
+.hb{display:grid;grid-template-columns:minmax(120px,190px) 1fr auto;gap:6px 10px;align-items:center;font-size:13px}
+.hb .lab{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hb .track{display:flex;gap:2px;height:16px;min-width:0}
+.hb .seg-b{height:100%;min-width:0}
+.hb .seg-b:first-child{border-radius:4px 0 0 4px} .hb .seg-b:last-child{border-radius:0 4px 4px 0} .hb .seg-b:only-child{border-radius:4px}
+.hb .val{font-variant-numeric:tabular-nums;white-space:nowrap;color:var(--ink)}
+.hb .val small{color:var(--muted)}
+.hb .row{display:contents}
+.hb.click .row{cursor:pointer}
+.hb.click .row:hover .lab{color:var(--brand-blue-dk);text-decoration:underline}
+.hb .row.dim .track,.hb .row.dim .lab,.hb .row.dim .val{opacity:.35}
+.hb .row.sel .lab{font-weight:700;color:var(--brand-blue-dk)}
+.fill-pay{background:var(--c-pay)} .fill-nopay{background:var(--c-nopay)}
+/* columnas */
+.vc{position:relative;height:220px;margin:6px 0 0 34px}
+.vc .gl{position:absolute;left:0;right:0;border-top:1px solid var(--grid)}
+.vc .gl span{position:absolute;right:calc(100% + 6px);top:-8px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.vc .gl.base{border-top-color:var(--muted)}
+.vc .cols{position:absolute;inset:0;display:flex;gap:3px;align-items:flex-end}
+.vc .col{flex:1;display:flex;flex-direction:column-reverse;gap:2px;height:100%;justify-content:flex-start;min-width:0;position:relative}
+.vc .col .s{width:100%}
+.vc .col .s.top{border-radius:4px 4px 0 0}
+.vc .col:hover{background:color-mix(in srgb,var(--soft) 70%,transparent)}
+.vc .ref{position:absolute;top:0;bottom:0;border-left:2px dashed var(--muted);opacity:.7}
+.vc .ref span{position:absolute;top:-2px;left:4px;font-size:11px;color:var(--muted);white-space:nowrap;background:var(--panel);padding:0 3px}
+.xl{display:flex;gap:3px;margin:6px 0 0 34px;font-size:11px;color:var(--muted)}
+.xl span{flex:1;text-align:center;white-space:nowrap;overflow:visible;min-width:0}
+#tip{position:fixed;z-index:50;pointer-events:none;background:var(--ink);color:var(--panel);font-size:12.5px;line-height:1.4;padding:7px 10px;border-radius:8px;max-width:300px;box-shadow:0 4px 14px rgba(0,0,0,.25);display:none}
+#tip b{font-weight:700}
+details.tbl{margin-top:12px}
+details.tbl summary{cursor:pointer;color:var(--brand-blue-dk);font-size:12.5px;font-weight:600}
+details.tbl .tablewrap{max-height:320px;overflow:auto}
+.kpi .v .pct{display:block;font-size:13px;color:var(--muted);font-weight:600;margin-top:-2px}
+.kpi.k-ok{border-top-color:var(--ok)!important} .kpi.k-bad{border-top-color:var(--bad)!important}
+.kpis.dk{grid-template-columns:repeat(auto-fit,minmax(145px,1fr))}
+.ico{font-weight:800;margin-right:4px}
+@media (max-width:860px){ .dash-grid{grid-template-columns:1fr} }
+@media (max-width:640px){ nav.tabs .in{padding:0 8px} .hb{grid-template-columns:minmax(90px,130px) 1fr auto}  main{padding:14px 12px 40px} header.top{padding:12px} .search{flex-wrap:wrap} .search label{width:100%} }
+@media print{ header.top button,.search,.hint{display:none} section.card,.kpi{box-shadow:none} }
+</style>
+<style>/*__LEAFLETCSS__*/</style>
+</head>
+<body>
+<div class="loading" id="loading"><div class="spin"></div><div id="loadingText">Cargando datos…</div></div>
+
+<header class="top">
+  <img class="logo" alt="Consorcio Movi Escolar 25" src="data:image/png;base64,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">
+  <div>
+    <h1>Subsidio de Transporte Escolar · Consulta y seguimiento</h1>
+    <div class="sub" id="dataStatus">—</div>
+  </div>
+  <button id="btnDatos" title="Ver o actualizar los archivos cargados">Datos cargados / actualizar</button>
+</header>
+
+<nav class="tabs" aria-label="Secciones"><div class="in" role="tablist">
+  <button role="tab" data-view="info" aria-selected="true">Información general</button>
+  <button role="tab" data-view="tablero" aria-selected="false">Tablero de visitas</button>
+  <button role="tab" data-view="consulta" aria-selected="false">Consulta por documento</button>
+</div></nav>
+
+<main>
+<!-- ================= INFORMACIÓN GENERAL ================= -->
+<div class="view info" id="v-info">
+  <section class="card">
+    <h2>Subsidio de Transporte Escolar (STE)</h2>
+    <p class="lead">Apoyo económico de la Secretaría de Educación del Distrito para que los estudiantes de colegios oficiales de Bogotá que viven lejos de su sede lleguen a clase. Se paga por días de asistencia, en cinco ciclos al año, a través de DaviPlata o de la tarjeta TuLlave.</p>
+    <div id="infoData"></div>
+  </section>
+
+  <div class="info-grid" style="margin-top:16px">
+    <section class="card">
+      <h2>¿Quién puede recibirlo?</h2>
+      <ul>
+        <li>Matriculado en un colegio oficial del Distrito, en jornada diurna (mañana, tarde o única). La nocturna aplica solo para discapacidad o SRPA.</li>
+        <li>Grados prejardín a 11 y aceleración. Menor de 19 años, salvo estudiantes con discapacidad.</li>
+        <li><b>Distancia peatonal casa – sede</b>: más de <b>2 km</b> para grados 1 a 11; más de <b>1 km</b> para prejardín, jardín, transición o estudiantes con discapacidad.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Tipo de subsidio y valor</h2>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Tipo</th><th>Para quién</th><th class="n">Tipo de pago</th></tr></thead>
+        <tbody>
+          <tr><td>Sencillo</td><td>14 años o más, sin discapacidad</td><td class="n">1</td></tr>
+          <tr><td>Doble</td><td>Menor de 14 años, sin discapacidad</td><td class="n">2</td></tr>
+          <tr><td>Discapacidad</td><td>Discapacidad no severa, 14 años o más</td><td class="n">1</td></tr>
+          <tr><td>Discapacidad + acompañante</td><td>Discapacidad severa a cualquier edad, o menor de 14 con discapacidad</td><td class="n">2</td></tr>
+        </tbody></table></div>
+      <p style="margin-top:10px"><b>Valor del día 2026: $5.600</b> ($5.100 para ciclos 2025).<br>Pago = días liquidados × $5.600 × tipo de pago.<br>Días liquidados = días del ciclo − fallas justificadas − fallas injustificadas.</p>
+      <p class="hint" style="margin:0">En un grupo familiar (mismo responsable), solo un hermano conserva el doble si estudian en el mismo colegio, sede y jornada, o en sedes a 1 km o menos. Los hermanos con discapacidad severa conservan ambos dobles.</p>
+    </section>
+
+    <section class="card">
+      <h2>Visitas domiciliarias</h2>
+      <p>La visita verifica que el beneficiario vive en la dirección registrada, que estudia en la sede y que cumple la distancia.</p>
+      <ul>
+        <li><b>PAGAR (sujeto a verificación)</b>: visita efectiva y cumple la distancia.</li>
+        <li><b>NO PAGAR – no cumple criterios</b>: la distancia no cumple, no vive en la dirección, o no se pudo verificar (ausente, rechazada, vive en otra dirección).</li>
+        <li>El resultado aplica <b>desde la fecha de la visita en adelante</b>; no es retroactivo.</li>
+        <li>Si hay varias visitas, cuenta la <b>última</b>.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Causales de no pago</h2>
+      <ul>
+        <li>Retirado, graduado, trasladado a ICBF o fallecido.</li>
+        <li>Más de 10 fallas injustificadas acumuladas en el año.</li>
+        <li>Uso de ruta escolar en el periodo.</li>
+        <li>Resultado de visita NO PAGAR.</li>
+        <li>Sin datos del responsable en SIMAT, o sin asistencia reportada.</li>
+        <li>Traslado de colegio sin cumplir la distancia.</li>
+        <li><b>No cobrar un ciclo</b>: si la base de dispersión vence sin cobro, se pierde el beneficio y no se dispersan más abonos.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>Ciclos y bases de pago 2026</h2>
+      <div class="tablewrap"><table>
+        <thead><tr><th>Ciclo</th><th class="n">Días</th><th>Vigencia de la base</th></tr></thead>
+        <tbody>
+          <tr><td>Ciclo 1</td><td class="n">39</td><td>28/05 – 27/06 (lote 1B: 04/06 – 14/07)</td></tr>
+          <tr><td>Ciclo 2</td><td class="n">38</td><td>24/07 – 23/08</td></tr>
+          <tr><td>Ciclo 3</td><td class="n">38</td><td>21/09 – 20/10 (y 24/09 – 08/10)</td></tr>
+          <tr><td>Ciclo 4</td><td class="n">38</td><td>Por definir</td></tr>
+          <tr><td>Ciclo 5</td><td class="n">38</td><td>Por definir</td></tr>
+        </tbody></table></div>
+      <p class="hint" style="margin:8px 0 0">Reclamaciones: hasta 30 días calendario después del abono.</p>
+    </section>
+
+    <section class="card">
+      <h2>Cómo usar esta herramienta</h2>
+      <ol class="steps">
+        <li>Cargue los archivos con <b>Datos cargados / actualizar</b>: liquidaciones de cada ciclo, consolidado de visitas y consolidado de pagos.</li>
+        <li>En <b>Tablero de visitas</b> vea las cifras generales y filtre por localidad, unidad de conteo y fechas.</li>
+        <li>En <b>Consulta por documento</b> digite el número del estudiante para ver sus visitas, su liquidación por ciclo y el estado de cobro.</li>
+      </ol>
+      <p class="hint" style="margin:0">Los archivos se procesan en este navegador. No se envían a ningún servidor.</p>
+    </section>
+  </div>
+</div>
+
+<!-- ================= TABLERO ================= -->
+<div class="view" id="v-tablero" hidden>
+  <div class="filters" id="filters">
+    <label class="f"><span>Localidad</span><select id="fLoc"><option value="">Todas las localidades</option></select></label>
+    <div class="f"><span>Localidad de</span><div class="seg" id="fBy"><button type="button" data-v="res" aria-pressed="true">Residencia</button><button type="button" data-v="col" aria-pressed="false">Colegio</button></div></div>
+    <div class="f"><span>Contar</span><div class="seg" id="fUnit"><button type="button" data-v="vis" aria-pressed="true">Visitas</button><button type="button" data-v="ben" aria-pressed="false">Beneficiarios (última visita)</button></div></div>
+    <label class="f"><span>Desde</span><input type="date" id="fFrom"></label>
+    <label class="f"><span>Hasta</span><input type="date" id="fTo"></label>
+    <div class="f"><span>&nbsp;</span><button type="button" id="fClear">Limpiar filtros</button></div>
+    <div class="note" id="fNote"></div>
+  </div>
+  <div id="dash"></div>
+</div>
+
+<!-- ================= CONSULTA ================= -->
+<div class="view" id="v-consulta" hidden>
+  <form class="search" id="form" autocomplete="off">
+    <label for="q">Número de documento</label>
+    <input id="q" inputmode="text" placeholder="Ej. 1028870914">
+    <button class="primary" type="submit">Consultar</button>
+  </form>
+  <div class="hint">Busca en las liquidaciones de cada ciclo, en el consolidado de pagos y en el consolidado de visitas domiciliarias. Clic en una fila de la liquidación para ver el detalle.</div>
+  <div id="out"></div>
+</div>
+</main>
+<div id="tip" role="tooltip"></div>
+
+<dialog id="dlg">
+  <div class="dlg-h"><h3>Datos cargados</h3><button id="dlgClose" type="button">Cerrar</button></div>
+  <div class="dlg-b">
+    <p class="dlg-intro">Cargue los archivos en este orden. Cada casilla acepta solo su tipo de archivo; si selecciona uno equivocado, se le avisa y no se carga. Los datos se procesan en este equipo y no se envían a ningún lado.</p>
+    <div class="slots">
+      <section class="slot" id="slot-liq">
+        <div class="slot-h"><span class="stepn">1</span><div class="slot-t"><b>Liquidaciones por ciclo</b>
+          <div class="desc">Un archivo por ciclo (ej. CICLO1_1B.xlsx, CICLO2.xlsx, CICLO3.xlsx). Debe tener las columnas CICLO, CICLOABONADO, NUMERO_DOCUMENTO, TOTAL_DIAS_A_LIQUIDAR y PAGAR - NO PAGAR. Si un lote ya existe, se reemplaza.</div></div>
+          <span class="slot-st" id="st-liq"></span></div>
+        <div id="list-liq"></div>
+        <label class="btn-file">+ Agregar liquidación<input type="file" data-kind="liq" accept=".xlsx,.xls,.xlsm" multiple hidden></label>
+      </section>
+      <section class="slot" id="slot-vis">
+        <div class="slot-h"><span class="stepn">2</span><div class="slot-t"><b>Consolidado de visitas domiciliarias</b>
+          <div class="desc">Archivo único (ej. 26. 20260927ConsolidadoVisitasDomiciliarias.xlsx). Usa IDENTIFICACIÓN DEL BENEFICIARIO, GEOREFERENCIACIÓN, RECOMENDACIÓN FINAL, LOCALIDAD RESIDENCIA, LATITUD y LONGITUD. Un archivo nuevo reemplaza al anterior.</div></div>
+          <span class="slot-st" id="st-vis"></span></div>
+        <div id="list-vis"></div>
+        <label class="btn-file">Cargar o reemplazar visitas<input type="file" data-kind="vis" accept=".xlsx,.xls,.xlsm" hidden></label>
+      </section>
+      <section class="slot" id="slot-pag">
+        <div class="slot-h"><span class="stepn">3</span><div class="slot-t"><b>Consolidado de pagos</b>
+          <div class="desc">Archivo único (ej. Consolidado_Pagos_20260924.xlsx). Usa CICLO EN LIQUIDACION, KEY, CICLOABONADO, ESTADO DE PAGO y FECHA FINAL VIGENCIA BASE. Un archivo nuevo reemplaza al anterior.</div></div>
+          <span class="slot-st" id="st-pag"></span></div>
+        <div id="list-pag"></div>
+        <label class="btn-file">Cargar o reemplazar pagos<input type="file" data-kind="pag" accept=".xlsx,.xls,.xlsm" hidden></label>
+      </section>
+    </div>
+    <label class="drop" id="drop">¿Tiene varios archivos a la vez? Arrástrelos aquí o <u>haga clic</u>; cada uno se reconoce y se ubica en su casilla.
+      <input type="file" id="file" accept=".xlsx,.xls,.xlsm" multiple hidden>
+    </label>
+    <div class="log" id="log"></div>
+    <div class="row-actions">
+      <button id="btnReset" type="button">Volver a los datos originales</button>
+    </div>
+  </div>
+</dialog>
+
+<script>/*__XLSX__*/</script>
+<script>/*__EXTRACT__*/</script>
+<script>/*__LEAFLET__*/</script>
+<script>const SEDES = /*__SEDES__*/{};</script>
+<script>
+const EMBEDDED_B64 = "__DATA__";
+const DB_NAME = 'consulta-ste', DB_STORE = 'kv';
+
+// ---------- utilidades ----------
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money = v => v == null || v === '' ? '—' : '$' + Math.round(v).toLocaleString('es-CO');
+const nf = v => v == null || v === '' ? '—' : (typeof v === 'number' ? v.toLocaleString('es-CO') : esc(v));
+const km = v => v == null ? '—' : v.toLocaleString('es-CO', {maximumFractionDigits: 2}) + ' km';
+const isPay = d => /^PAGAR/i.test(d || '');
+const isNoPay = d => /^NO PAGAR/i.test(d || '');
+
+function idb() {
+  return new Promise((res, rej) => {
+    try {
+      const r = indexedDB.open(DB_NAME, 1);
+      r.onupgradeneeded = () => r.result.createObjectStore(DB_STORE);
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    } catch (e) { rej(e); }
+  });
+}
+async function idbGet(k) { try { const db = await idb(); return await new Promise((res) => { const t = db.transaction(DB_STORE).objectStore(DB_STORE).get(k); t.onsuccess = () => res(t.result); t.onerror = () => res(undefined); }); } catch (e) { return undefined; } }
+async function idbSet(k, v) { try { const db = await idb(); await new Promise((res, rej) => { const t = db.transaction(DB_STORE, 'readwrite'); t.objectStore(DB_STORE).put(v, k); t.oncomplete = res; t.onerror = () => rej(t.error); }); return true; } catch (e) { return false; } }
+async function idbDel(k) { try { const db = await idb(); await new Promise((res) => { const t = db.transaction(DB_STORE, 'readwrite'); t.objectStore(DB_STORE).delete(k); t.oncomplete = res; t.onerror = res; }); } catch (e) {} }
+
+const WEB = !EMBEDDED_B64;   // versión web: sin datos embebidos
+const hasData = () => !!(DATA && (DATA.sources.length || DATA.visitas || DATA.pagos));
+async function decodeEmbedded() {
+  if (WEB) return {version: 1, generado: 'web-v1', sources: [], visitas: null, pagos: null};
+  const bin = atob(EMBEDDED_B64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  const stream = new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'));
+  return JSON.parse(await new Response(stream).text());
+}
+
+// ---------- estado ----------
+let DATA = null;          // {generado, sources:[], visitas}
+let EMB_GEN = null;       // fecha de generación del paquete embebido
+let VISALL = [];
+let LIQ = new Map(), EST = new Map(), VIS = new Map(), PAG = new Map(), PAGDOC = new Map(), LOTES = [];
+
+function loteOrder(l) {
+  const m = String(l).match(/CICLO\s*(\d+)\s*([A-Z])?/i);
+  if (!m) return 999;
+  return Number(m[1]) * 10 + (m[2] ? m[2].charCodeAt(0) - 64 : 0);
+}
+function cicloAbInfo(ca) {
+  const m = String(ca || '').toUpperCase().match(/CICLO-?(\d)_(\d{4})/);
+  return m ? {n: +m[1], y: +m[2], rec: /RECONOC/i.test(ca)} : null;
+}
+
+function buildIndex() {
+  LIQ = new Map(); EST = new Map(); VIS = new Map(); PAG = new Map(); PAGDOC = new Map(); VISALL = [];
+  const lotes = new Set();
+  const srcs = [...DATA.sources].sort((a, b) => Math.max(...Object.keys(a.lotes).map(loteOrder)) - Math.max(...Object.keys(b.lotes).map(loteOrder)));
+  for (const s of srcs) {
+    Object.keys(s.lotes).forEach(l => lotes.add(l));
+    for (const r of STE.unpack(s.rows)) { let a = LIQ.get(r.doc); if (!a) LIQ.set(r.doc, a = []); a.push(r); }
+    for (const e of STE.unpack(s.est)) EST.set(e.doc, e);   // la fuente más reciente queda al final
+  }
+  if (DATA.visitas) for (const v of STE.unpack(DATA.visitas.rows)) { let a = VIS.get(v.doc); if (!a) VIS.set(v.doc, a = []); a.push(v); VISALL.push(v); }
+  if (DATA.pagos) for (const p of STE.unpack(DATA.pagos.rows)) {
+    PAG.set(p.pid + '|' + p.cicloAb + '|' + p.lote, p); PAG.set('D' + p.doc + '|' + p.cicloAb + '|' + p.lote, p);
+    let a = PAGDOC.get(p.doc); if (!a) PAGDOC.set(p.doc, a = []); a.push(p);
+  }
+  LOTES = [...lotes].sort((a, b) => loteOrder(a) - loteOrder(b));
+  const nLiq = DATA.sources.reduce((t, s) => t + s.n, 0);
+  prepDash(); renderInfoData(); if (currentView === 'tablero') renderDash();
+  if (!hasData()) { $('#dataStatus').textContent = 'Sin datos cargados en este navegador'; renderSources(); return; }
+  $('#dataStatus').textContent = `Lotes: ${LOTES.join(', ')} · ${nLiq.toLocaleString('es-CO')} registros de liquidación · ` +
+    (DATA.visitas ? `${DATA.visitas.n.toLocaleString('es-CO')} visitas (${DATA.visitas.name})` : 'sin consolidado de visitas') + ' · ' +
+    (DATA.pagos ? `pagos: ${DATA.pagos.name}` : 'sin consolidado de pagos');
+  renderSources();
+}
+
+// ---------- estado de pago ----------
+const NA = s => !s || /^(N\/A|N\/D|#N\/A)$/i.test(String(s).trim());
+const parseDMY = s => { const m = String(s || '').match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/); return m ? new Date(+m[3], m[2] - 1, +m[1]) : null; };
+function pagoOf(r) {
+  const pid = String(r.key || '').split('_')[0];
+  const lote = /TUTELA/i.test(r.lote) ? 'CICLO 3' : r.lote;
+  return PAG.get(pid + '|' + r.cicloAb + '|' + lote) || PAG.get('D' + r.doc + '|' + r.cicloAb + '|' + lote) || null;
+}
+// estados: cob (cobrado), nocob (no cobrado, base vencida), pend (base activa / por cobrar), onp, nodisp, nd
+function pagoState(p) {
+  if (!p) return {k: 'none', label: 'Sin dato de pago', cls: 'info'};
+  const est = (p.est || '').toUpperCase(), raz = NA(p.raz) ? '' : p.raz;
+  const ff = parseDMY(p.ff), hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+  if (est === 'COBRADO') return {k: 'cob', label: 'Cobrado', cls: 'ok', sub: p.fc ? 'el ' + p.fc : ''};
+  if (est === 'NO COBRADO') {
+    if (ff && ff < hoy) return {k: 'nocob', label: 'No cobrado', cls: 'bad', sub: 'base vencida ' + p.ff + (raz ? ' · ' + raz : '')};
+    return {k: 'pend', label: 'Pendiente de cobro', cls: 'warn', sub: ff ? 'hasta ' + p.ff : ''};
+  }
+  if (/^BASE ACTIVA/i.test(raz)) return {k: 'pend', label: 'Pendiente de cobro', cls: 'warn', sub: 'base activa' + (ff ? ' hasta ' + p.ff : '')};
+  if (/^ONP/.test(est)) return {k: 'onp', label: 'ONP en dispersión', cls: 'info', sub: raz || est};
+  if (est === 'N/D') return {k: 'nd', label: 'Sin información (N/D)', cls: 'info', sub: ''};
+  return {k: 'nodisp', label: 'No dispersado', cls: 'info', sub: raz};
+}
+const chipPago = s => `<span class="chip ${s.cls}">${esc(s.label)}</span>${s.sub ? `<div class="more" style="color:var(--muted);font-size:12px;margin-top:3px">${esc(s.sub)}</div>` : ''}`;
+// pérdida del beneficio: primer abono no cobrado con base vencida
+function perdida(doc) {
+  const ps = (PAGDOC.get(doc) || []).map(p => ({p, s: pagoState(p), ff: parseDMY(p.ff)})).filter(x => x.s.k === 'nocob' && x.ff && !/RECLAMACION|RADICADO EN TIEMPOS/i.test(x.p.raz || ''));
+  if (!ps.length) return null;
+  ps.sort((a, b) => a.ff - b.ff);
+  const first = ps[0];
+  const after = (PAGDOC.get(doc) || []).filter(p => { const fa = parseDMY(p.fa); const s = pagoState(p); return fa && fa > first.ff && ['cob', 'nocob', 'pend'].includes(s.k); });
+  return {first: first.p, after};
+}
+
+// ---------- búsqueda y render ----------
+function search(raw) {
+  const doc = STE.normDoc(raw);
+  const out = $('#out');
+  if (!hasData()) { out.innerHTML = `<div class="msg">Aún no hay datos cargados en este navegador. Use <b>Datos cargados / actualizar</b> y seleccione las liquidaciones de cada ciclo, el consolidado de visitas y el consolidado de pagos.</div>`; return; }
+  if (!doc) { out.innerHTML = ''; return; }
+  const liq = (LIQ.get(doc) || []).slice().sort((a, b) => loteOrder(a.lote) - loteOrder(b.lote) || orderCa(a.cicloAb) - orderCa(b.cicloAb));
+  const vis = (VIS.get(doc) || []).slice().sort((a, b) => (+a.num || 0) - (+b.num || 0));
+  const est = EST.get(doc);
+  if (MAP) { MAP.remove(); MAP = null; }
+  if (!liq.length && !vis.length) {
+    out.innerHTML = `<div class="msg bad">No se encontró el documento <b>${esc(doc)}</b> en las liquidaciones ni en el consolidado de visitas cargados.</div>`;
+    return;
+  }
+  out.innerHTML = renderWho(doc, est, vis) + renderPerdida(doc) + renderKpis(liq, vis) + renderMap(doc, vis, est) + renderCycles(liq) + renderLiqTable(liq) + renderVisits(vis);
+  initMap(vis, est);
+  out.querySelectorAll('tr.main').forEach(tr => tr.addEventListener('click', () => {
+    const d = tr.nextElementSibling; d.hidden = !d.hidden;
+  }));
+}
+function orderCa(ca) { const i = cicloAbInfo(ca); return i ? i.y * 10 + i.n : 0; }
+
+function renderWho(doc, e, vis) {
+  const v = vis[vis.length - 1];
+  const nombre = (e && e.nombre) || (v && v.nombre) || '';
+  const tipoSub = e ? `${e.tipoTrans || '—'}${e.tipoPago ? ' (tipo pago ' + e.tipoPago + ')' : ''}` : '—';
+  const facts = [
+    ['Colegio de matrícula', e ? e.colegio : v && v.colegio], ['Sede', e ? e.sede : v && v.sede],
+    ['Jornada / grado', e ? `${e.jornada || '—'} · ${e.grado || '—'}` : v ? `${v.jornada} · grado ${v.grado}` : ''],
+    ['Localidad de residencia', e && e.locRes], ['Tipo de subsidio', tipoSub],
+    ['Discapacidad', (e && e.disc) || (v && v.disc)], ['Edad (beneficio)', e && e.edad],
+    ['Medio de pago', e && e.tipoBen], ['Estado del beneficio', e && e.estado],
+  ];
+  return `<section class="card"><div class="who"><div>
+      <div class="name">${esc(nombre || 'Sin nombre registrado')}</div>
+      <div class="doc">${esc(e && e.tipoDoc ? e.tipoDoc : 'Documento')} · <b>${esc(doc)}</b>${e && e.lote ? ` · datos tomados del lote ${esc(e.lote)}` : ''}</div>
+    </div></div>
+    <div class="facts">${facts.map(([k, x]) => `<div class="fact"><div class="k">${k}</div><div class="v">${x ? esc(x) : '—'}</div></div>`).join('')}</div>
+  </section>`;
+}
+
+function uniquePaid(liq) {
+  const seen = new Set(), out = [];
+  for (const r of liq) if (isPay(r.decision)) { const k = r.key || (r.doc + r.cicloAb); if (!seen.has(k)) { seen.add(k); out.push(r); } }
+  return out;
+}
+
+function renderPerdida(doc) {
+  const x = perdida(doc);
+  if (!x) return '';
+  const f = x.first;
+  const extra = x.after.length ? `<br>Después de esa fecha se le dispersaron ${x.after.length} abono(s): ${x.after.map(p => `${esc(p.cicloAb)} (${esc(p.lote)}, ${esc(pagoState(p).label.toLowerCase())}, ${money(p.sub != null ? p.sub : p.val)})`).join('; ')}.` : '';
+  return `<div class="msg bad" style="margin-top:16px"><b>Pérdida del beneficio por no cobro.</b> No cobró ${esc(f.cicloAb)} del lote ${esc(f.lote)} (abono ${esc(f.fa)}, base vencida ${esc(f.ff)}). Desde esa fecha no se deben dispersar más abonos.${extra}</div>`;
+}
+
+function renderKpis(liq, vis) {
+  const last = vis[vis.length - 1];
+  const paid = uniquePaid(liq);
+  const total = paid.reduce((t, r) => t + (r.pago || 0), 0);
+  const c26 = cycleStatus(liq).filter(c => c.y === 2026 && c.state !== 'pend');
+  const pagados = c26.filter(c => c.state === 'ok').length;
+  const recChip = last ? chipRecom(last.recom) : '<span class="chip info">Sin visita</span>';
+  const st = paid.map(r => pagoState(pagoOf(r)));
+  const cobrado = paid.reduce((t, r, i) => t + (st[i].k === 'cob' ? ((pagoOf(r) || {}).sub || r.pago || 0) : 0), 0);
+  const nCob = st.filter(s => s.k === 'cob').length, nNo = st.filter(s => s.k === 'nocob').length, nPend = st.filter(s => s.k === 'pend').length;
+  return `<div class="kpis">
+    <div class="kpi"><div class="k">Visitas realizadas</div><div class="v">${vis.length}</div><div class="s">${last ? 'Última: ' + esc(last.fecha || last.periodo) : 'No tiene visitas registradas'}</div></div>
+    <div class="kpi"><div class="k">Resultado última visita</div><div class="v" style="font-size:15px;margin-top:8px">${recChip}</div><div class="s">${last ? esc(last.estado) + ' · ' + esc(last.tipoVisita) : ''}</div></div>
+    <div class="kpi"><div class="k">Distancia casa – sede (visita)</div><div class="v">${last ? km(last.distancia) : '—'}</div><div class="s">${last ? esc(shortGeo(last.georef)) : ''}</div></div>
+    <div class="kpi"><div class="k">Ciclos 2026 liquidados para pago</div><div class="v">${pagados} de ${c26.length}</div><div class="s">ciclos con liquidación cargada</div></div>
+    <div class="kpi"><div class="k">Total cobrado</div><div class="v">${DATA.pagos ? money(cobrado) : '—'}</div><div class="s">${DATA.pagos ? `${nCob} de ${paid.length} abono(s) cobrados · liquidado ${money(total)}` : 'sin consolidado de pagos'}</div></div>
+    <div class="kpi"><div class="k">Abonos no cobrados</div><div class="v" style="${nNo ? 'color:var(--bad)' : ''}">${DATA.pagos ? nNo : '—'}</div><div class="s">${nPend ? nPend + ' pendiente(s) de cobro (base activa)' : 'base vencida sin cobrar'}</div></div>
+  </div>`;
+}
+function shortGeo(g) { return (g || '').replace(/^NO SE PUDO VERIFICAR LA INFORMACIÓN EN VISITA - /, 'No verificada · '); }
+function chipRecom(r) {
+  if (!r) return '<span class="chip info">—</span>';
+  if (/^NO PAGAR/i.test(r)) return `<span class="chip bad">${esc(r)}</span>`;
+  if (/^PAGAR/i.test(r)) return `<span class="chip ok">${esc(r)}</span>`;
+  return `<span class="chip info">${esc(r)}</span>`;
+}
+function chipDecision(d) {
+  if (isPay(d)) return `<span class="chip ok">${esc(d)}</span>`;
+  if (isNoPay(d)) return `<span class="chip bad">NO PAGAR</span>`;
+  return `<span class="chip info">${esc(d || 'Sin decisión')}</span>`;
+}
+
+// Estado por ciclo abonado (2026 C1–C5 + ciclos 2025 reconocidos)
+function cycleStatus(liq) {
+  const loaded = new Set(LOTES.map(l => (String(l).match(/CICLO\s*(\d+)/i) || [])[1]).filter(Boolean).map(Number));
+  const by = new Map();
+  for (const r of liq) { const i = cicloAbInfo(r.cicloAb); if (!i) continue; const k = i.y + '-' + i.n; if (!by.has(k)) by.set(k, {y: i.y, n: i.n, rows: []}); by.get(k).rows.push(r); }
+  for (let n = 1; n <= 5; n++) if (!by.has('2026-' + n)) by.set('2026-' + n, {y: 2026, n, rows: []});
+  const list = [...by.values()].sort((a, b) => b.y - a.y || a.n - b.n);
+  for (const c of list) {
+    const paid = uniquePaid(c.rows);
+    if (paid.length) {
+      c.state = 'ok';
+      c.dias = paid.reduce((t, r) => t + (r.total || 0), 0);
+      c.valor = paid.reduce((t, r) => t + (r.pago || 0), 0);
+      c.where = [...new Set(paid.map(r => r.lote))].join(', ');
+      c.pagos = paid.map(r => pagoState(pagoOf(r)));
+      c.rec = paid.some(r => cicloAbInfo(r.cicloAb).rec || c.y < 2026 || loteOrder(r.lote) >= (c.n + 1) * 10);
+    } else if (c.rows.length) {
+      c.state = 'bad'; const last = c.rows[c.rows.length - 1];
+      c.motivo = last.decision; c.where = [...new Set(c.rows.map(r => r.lote))].join(', ');
+    } else if (c.y === 2026 && loaded.has(c.n)) { c.state = 'warn'; }
+    else c.state = 'pend';
+  }
+  return list;
+}
+
+function renderCycles(liq) {
+  const list = cycleStatus(liq);
+  const cards = list.map(c => {
+    const title = `Ciclo ${c.n} · ${c.y}`;
+    if (c.state === 'ok') return `<div class="cyc ok"><div class="t">${title}<span class="chip ok">Liquidado</span></div>
+      <div class="d">Días liquidados: <b>${nf(c.dias)}</b><br>Valor: <b>${money(c.valor)}</b><br>Lote: ${esc(c.where)}${c.rec ? ' <span class="chip warn">reconocimiento</span>' : ''}
+      ${DATA.pagos ? `<div style="margin-top:8px">${c.pagos.map(chipPago).join('')}</div>` : ''}</div></div>`;
+    if (c.state === 'bad') return `<div class="cyc bad"><div class="t">${title}<span class="chip bad">No pagado</span></div>
+      <div class="d">${esc(c.motivo || 'Sin decisión')}<br>Lote: ${esc(c.where)}</div></div>`;
+    if (c.state === 'warn') return `<div class="cyc warn"><div class="t">${title}<span class="chip warn">No aparece</span></div>
+      <div class="d">El documento no está en la liquidación de este ciclo.</div></div>`;
+    return `<div class="cyc info"><div class="t">${title}<span class="chip info">Pendiente</span></div><div class="d">Liquidación del ciclo aún no cargada.</div></div>`;
+  }).join('');
+  return `<section class="card"><h2>Liquidación y cobro por ciclo</h2><div class="cycles">${cards}</div>
+    <div class="hint" style="margin:10px 0 0">“Reconocimiento”: el ciclo se pagó en un lote posterior (por reclamación, visita, actualización de datos, etc.).</div></section>`;
+}
+
+function obsCell(r) {
+  const parts = [];
+  if (isNoPay(r.decision)) parts.push(`<div class="why">${esc(r.decision.replace(/^NO PAGAR\s*-?\s*/i, '') || 'No pagar')}</div>`);
+  if (r.obs) parts.push(`<div>${esc(r.obs)}</div>`);
+  if (isNoPay(r.decision) && r.obsVis) parts.push(`<div class="more">Visita: ${esc(r.obsVis)}</div>`);
+  if (r.obsAsis && !/^NINGUNA$/i.test(r.obsAsis.trim())) parts.push(`<div class="more">Asistencia: ${esc(r.obsAsis)}</div>`);
+  if (r.rutas) parts.push(`<div class="more">${esc(r.rutas)}</div>`);
+  return parts.length ? parts.join('') : '<span class="empty">—</span>';
+}
+
+function renderLiqTable(liq) {
+  if (!liq.length) return `<section class="card"><h2>Detalle de la liquidación</h2><div class="empty">El documento no aparece en ningún lote de liquidación cargado.</div></section>`;
+  const present = new Set(liq.map(r => r.lote));
+  const missing = LOTES.filter(l => !present.has(l) && /^CICLO\s*\d+$/i.test(l.trim()));
+  const rows = liq.map(r => {
+    const p = pagoOf(r);
+    const tarjeta = r.tarjeta ? `<div class="more" style="color:var(--muted)">+ tarjeta ${money(r.tarjeta)}</div>` : '';
+    const det = [
+      ['Fuente', `${r.fuente} · origen ${r.archivo || '—'} (${r.contar || '—'})`], ['Estado beneficio / matrícula', `${r.estado || '—'} / ${r.anexo || '—'}`],
+      ['Tipo de subsidio', `${r.tipoTrans || '—'} · ${r.tipoBen || ''}`], ['Evaluación tipo de pago', r.evalTipo],
+      ['Evaluación grupo familiar', r.evalGrupo], ['Distancia por cambio de colegio', r.dist],
+      ['Fecha asignación excepcional', r.fechaExc], ['Total fallas injustificadas 2026', r.totInj],
+      ['Observación de pago', r.obsPago], ['Observación de visita', r.obsVis], ['Medios alternativos', r.medios],
+      ['Ajustes a realizar', r.ajustes], ['Subtotal (incluye tarjeta)', r.subtotal != null ? money(r.subtotal) : ''],
+      ['Pago – medio', p && p.medio], ['Pago – fecha de abono', p && p.fa], ['Pago – vigencia de la base', p && (p.fi || p.ff) ? `${p.fi || '?'} a ${p.ff || '?'}` : ''],
+      ['Pago – fecha máxima de reclamación', p && p.fmr], ['Pago – estado', p && p.est], ['Pago – fecha de cobro', p && p.fc],
+      ['Pago – razón de no pago', p && !NA(p.raz) ? p.raz : ''], ['Pago – valor dispersado', p && p.sub != null && pagoState(p).k !== 'onp' && pagoState(p).k !== 'nodisp' ? money(p.sub) : ''],
+    ].filter(([, v]) => v !== '' && v != null).map(([k, v]) => `<div><span>${k}:</span> ${esc(v)}</div>`).join('');
+    return `<tr class="main" title="Clic para ver el detalle">
+      <td class="lote"><b>${esc(r.lote)}</b></td><td>${esc(r.cicloAb)}</td>
+      <td class="n">${nf(r.dias)}</td><td class="n">${nf(r.fj)}</td><td class="n">${nf(r.fi)}</td>
+      <td class="n"><b>${nf(r.total)}</b></td><td class="n">${esc(r.tipoPago || '—')}</td>
+      <td class="n${isNoPay(r.decision) ? ' nopay' : ''}" ${isNoPay(r.decision) ? 'title="Valor calculado, no se paga"' : ''}>${money(r.pago)}${tarjeta}</td><td>${chipDecision(r.decision)}</td>
+      <td>${DATA.pagos ? chipPago(pagoState(p)) : '—'}</td><td class="obs">${obsCell(r)}</td></tr>
+      <tr class="det" hidden><td colspan="11"><div class="dl">${det}</div></td></tr>`;
+  }).join('');
+  const miss = missing.length ? `<div class="msg" style="margin-top:12px">No aparece en: <b>${missing.map(esc).join(', ')}</b>.</div>` : '';
+  return `<section class="card"><h2>Detalle de la liquidación <span class="count">${liq.length} registro(s)</span></h2>
+    <div class="tablewrap"><table><thead><tr>
+      <th>Lote</th><th>Ciclo abonado</th><th class="n">Días ciclo</th><th class="n">Fallas just.</th><th class="n">Fallas injust.</th>
+      <th class="n">Días liquidados</th><th class="n">Tipo pago</th><th class="n">Valor</th><th>Decisión</th><th>Estado de pago</th><th>Observación</th>
+    </tr></thead><tbody>${rows}</tbody></table></div>${miss}
+    <div class="hint" style="margin:10px 0 0">Días liquidados = días del ciclo − (fallas justificadas + injustificadas). Valor = días liquidados × $5.600 × tipo de pago ($5.100 para ciclos 2025). Los valores tachados se calcularon pero no se pagan.</div>
+  </section>`;
+}
+
+function renderVisits(vis) {
+  if (!vis.length) return `<section class="card"><h2>Visitas domiciliarias</h2><div class="empty">No tiene visitas registradas en el consolidado cargado${DATA.visitas ? ' (' + esc(DATA.visitas.name) + ')' : ''}.</div></section>`;
+  const cards = vis.map(v => `<div class="visit">
+      <div class="head"><span class="num">Visita ${esc(v.num || '?')}</span><span class="when">${esc(v.fecha)} · ${esc(v.periodo)} · ${esc(v.semana)}</span>
+        <span class="chip info">${esc(v.origen)}</span>${chipRecom(v.recom)}</div>
+      <div class="grid">
+        <div><div class="k">Distancia casa – sede</div><div class="v">${km(v.distancia)}</div></div>
+        <div><div class="k">Tipo de visita</div><div class="v">${esc(v.tipoVisita || '—')}</div></div>
+        <div><div class="k">Estado final</div><div class="v">${esc(v.estado || '—')}</div></div>
+        <div><div class="k">¿Habita en la vivienda?</div><div class="v">${esc(v.habita || '—')}</div></div>
+        <div><div class="k">¿Estudia en la IE/sede?</div><div class="v">${esc(v.estudia || '—')}</div></div>
+        <div><div class="k">Dirección</div><div class="v">${esc(v.dirCorrecta || '—')}</div></div>
+        <div><div class="k">Grado / jornada</div><div class="v">${esc(v.grado || '—')} · ${esc(v.jornada || '—')}</div></div>
+        <div><div class="k">Sticker / verificador</div><div class="v">${esc(v.sticker || '—')} · ${esc(v.verificador || '—')}</div></div>
+      </div>
+      <div class="text"><div class="k">Georreferenciación</div><div>${esc(v.georef || '—')}</div></div>
+      <div class="text"><div class="k">Observación de la visita</div><div>${esc(v.obs || '—')}</div></div>
+    </div>`).join('');
+  return `<section class="card"><h2>Visitas domiciliarias <span class="count">${vis.length} visita(s)</span></h2><div class="visits">${cards}</div></section>`;
+}
+
+// ---------- navegación ----------
+let currentView = 'info';
+function showView(v) {
+  if (!['info', 'tablero', 'consulta'].includes(v)) v = 'info';
+  currentView = v;
+  document.querySelectorAll('nav.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.view === v ? 'true' : 'false'));
+  document.querySelectorAll('.view').forEach(el => { el.hidden = el.id !== 'v-' + v; });
+  if (location.hash !== '#' + v) history.replaceState(null, '', '#' + v);
+  if (v === 'tablero') renderDash();
+  if (v === 'consulta') setTimeout(() => $('#q').focus(), 0);
+}
+function initNav() {
+  document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));
+  window.addEventListener('hashchange', () => showView(location.hash.slice(1)));
+  showView(location.hash.slice(1) || (hasData() && DATA.visitas ? 'tablero' : 'info'));
+}
+
+function renderInfoData() {
+  const el = $('#infoData'); if (!el) return;
+  if (!hasData()) {
+    el.innerHTML = `<div class="msg" style="margin-top:4px"><b>Aún no hay datos cargados en este navegador.</b> Use el botón <b>Datos cargados / actualizar</b> (arriba a la derecha) y seleccione las liquidaciones de cada ciclo (CICLO1_1B, CICLO2, CICLO3…), el consolidado de visitas domiciliarias y el consolidado de pagos.</div>`;
+    return;
+  }
+  const nLiq = DATA.sources.reduce((t, s) => t + s.n, 0);
+  const benLiq = LIQ.size;
+  const items = [
+    ['Lotes de liquidación', LOTES.length ? LOTES.join(', ') : '—', nLiq ? nLiq.toLocaleString('es-CO') + ' registros' : ''],
+    ['Beneficiarios en liquidaciones', benLiq ? benLiq.toLocaleString('es-CO') : '—', ''],
+    ['Visitas domiciliarias', DATA.visitas ? DATA.visitas.n.toLocaleString('es-CO') : '—', DATA.visitas ? VIS.size.toLocaleString('es-CO') + ' beneficiarios' : 'sin consolidado'],
+    ['Consolidado de pagos', DATA.pagos ? DATA.pagos.n.toLocaleString('es-CO') : '—', DATA.pagos ? DATA.pagos.name : 'sin consolidado'],
+  ];
+  el.innerHTML = `<div class="kpis">${items.map(([k, v, s]) => `<div class="kpi"><div class="k">${k}</div><div class="v"${String(v).length > 12 ? ' style="font-size:15px;margin-top:8px"' : ''}>${esc(v)}</div><div class="s">${esc(s)}</div></div>`).join('')}</div>`;
+}
+
+// ---------- tablero de visitas ----------
+const DF = {loc: '', by: 'res', unit: 'vis', from: '', to: ''};
+let VPREP = [];       // visitas enriquecidas
+const LOC_FIX = {'SANTAFE': 'SANTA FE', 'SANTA FE': 'SANTA FE'};
+const normLoc = s => { const k = String(s || '').toUpperCase().replace(/\s+/g, ' ').trim(); return k ? (LOC_FIX[k] || k) : 'SIN DATO'; };
+const fmtN = n => n.toLocaleString('es-CO');
+const pct = (a, b) => b ? (100 * a / b).toLocaleString('es-CO', {maximumFractionDigits: 1}) + ' %' : '—';
+
+function motivo(v) {
+  const g = (v.georef || '').toUpperCase();
+  if (/^NO SE PUDO VERIFICAR/.test(g)) return 'No se pudo verificar (visita no efectiva)';
+  if (/NO VIVE ALL/.test(g)) return 'No vive en la dirección registrada';
+  if (/NO CUMPLE, DISTANCIA MENOR/.test(g)) return 'No cumple la distancia';
+  return 'Otra causa';
+}
+function prepDash() {
+  VPREP = VISALL.map(v => {
+    const d = parseDMY(v.fecha);
+    const sw = String(v.semana || '').match(/(\d+)/);
+    return {
+      doc: v.doc, d, t: d ? d.getTime() : 0, num: +v.num || 1, semana: sw ? +sw[1] : null, periodo: v.periodo || '',
+      res: normLoc(v.loc), col: normLoc(v.locCol), nopay: isNoPay(v.recom), pay: isPay(v.recom),
+      efectiva: /^EFECTIVA$/i.test((v.estado || '').trim()), tipo: v.tipoVisita || 'Sin dato', origen: v.origen || 'Sin dato',
+      dist: typeof v.distancia === 'number' ? v.distancia : null, distNo: /NO CUMPLE, DISTANCIA MENOR/i.test(v.georef || ''),
+      motivo: isNoPay(v.recom) ? motivo(v) : null
+    };
+  });
+  const sel = $('#fLoc'); if (!sel) return;
+  const locs = new Map();
+  for (const v of VPREP) { const k = DF.by === 'col' ? v.col : v.res; locs.set(k, (locs.get(k) || 0) + 1); }
+  const keep = DF.loc;
+  sel.innerHTML = '<option value="">Todas las localidades</option>' +
+    [...locs.entries()].sort((a, b) => a[0].localeCompare(b[0], 'es')).map(([k, n]) => `<option value="${esc(k)}">${esc(titleCase(k))} (${fmtN(n)})</option>`).join('');
+  sel.value = locs.has(keep) ? keep : ''; DF.loc = sel.value;
+}
+const titleCase = s => s === 'SIN DATO' ? 'Sin dato' : s.toLowerCase().replace(/(^|\s)\S/g, c => c.toUpperCase()).replace(/\b(De|Del|La|Los)\b/g, w => w.toLowerCase()).replace(/^./, c => c.toUpperCase());
+
+function initDash() {
+  $('#fLoc').addEventListener('change', e => { DF.loc = e.target.value; renderDash(); });
+  const seg = (id, key) => $(id).addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    DF[key] = b.dataset.v;
+    $(id).querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+    if (key === 'by') { DF.loc = ''; prepDash(); }
+    renderDash();
+  });
+  seg('#fBy', 'by'); seg('#fUnit', 'unit');
+  $('#fFrom').addEventListener('change', e => { DF.from = e.target.value; renderDash(); });
+  $('#fTo').addEventListener('change', e => { DF.to = e.target.value; renderDash(); });
+  $('#fClear').addEventListener('click', () => {
+    Object.assign(DF, {loc: '', from: '', to: ''}); $('#fLoc').value = ''; $('#fFrom').value = ''; $('#fTo').value = ''; renderDash();
+  });
+  // tooltip
+  const tip = $('#tip');
+  const show = (el, x, y) => { tip.innerHTML = el.dataset.tip; tip.style.display = 'block';
+    const r = tip.getBoundingClientRect(); let L = x + 14, T = y + 14;
+    if (L + r.width > innerWidth - 8) L = x - r.width - 14; if (T + r.height > innerHeight - 8) T = y - r.height - 14;
+    tip.style.left = Math.max(8, L) + 'px'; tip.style.top = Math.max(8, T) + 'px'; };
+  document.addEventListener('mousemove', e => { const el = e.target.closest('[data-tip]'); if (el) show(el, e.clientX, e.clientY); else tip.style.display = 'none'; });
+  document.addEventListener('click', e => { const el = e.target.closest('[data-tip]'); if (!el) tip.style.display = 'none'; });
+  $('#dash').addEventListener('click', e => {
+    const r = e.target.closest('[data-loc]'); if (r) { DF.loc = DF.loc === r.dataset.loc ? '' : r.dataset.loc; $('#fLoc').value = DF.loc; renderDash(); return; }
+    const c = e.target.closest('[data-csv]'); if (c) downloadCsv(c.dataset.csv);
+  });
+}
+
+// visitas filtradas por fecha (sin localidad)
+function byDate() {
+  const f = DF.from ? new Date(DF.from + 'T00:00:00').getTime() : -Infinity, t = DF.to ? new Date(DF.to + 'T23:59:59').getTime() : Infinity;
+  if (!DF.from && !DF.to) return VPREP;
+  return VPREP.filter(v => v.t && v.t >= f && v.t <= t);
+}
+// unidad: visitas o última visita por beneficiario
+function toUnit(list) {
+  if (DF.unit === 'vis') return list;
+  const last = new Map();
+  for (const v of list) { const p = last.get(v.doc); if (!p || v.num > p.num || (v.num === p.num && v.t > p.t)) last.set(v.doc, v); }
+  return [...last.values()];
+}
+const locOf = v => DF.by === 'col' ? v.col : v.res;
+
+function stackGroups(list, keyFn, order) {
+  const m = new Map();
+  for (const v of list) { const k = keyFn(v); if (k == null) continue; let g = m.get(k); if (!g) m.set(k, g = {k, pay: 0, nopay: 0, n: 0}); g.n++; if (v.nopay) g.nopay++; else if (v.pay) g.pay++; }
+  let arr = [...m.values()];
+  if (order) arr.sort(order); else arr.sort((a, b) => b.n - a.n);
+  return arr;
+}
+
+const TABLES = {};
+function tableHtml(id, head, rows) {
+  TABLES[id] = [head, ...rows];
+  return `<details class="tbl"><summary>Ver como tabla</summary><div class="tablewrap"><table><thead><tr>${head.map((h, i) => `<th${i ? ' class="n"' : ''}>${esc(h)}</th>`).join('')}</tr></thead>
+    <tbody>${rows.map(r => `<tr>${r.map((c, i) => `<td${i ? ' class="n"' : ''}>${esc(typeof c === 'number' ? fmtN(c) : c)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
+    <div style="margin-top:8px"><button type="button" data-csv="${id}">Descargar CSV</button></div></details>`;
+}
+function downloadCsv(id) {
+  const rows = TABLES[id]; if (!rows) return;
+  const csv = '﻿' + rows.map(r => r.map(c => { const s = String(c == null ? '' : c); return /[;"\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(';')).join('\r\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv;charset=utf-8'}));
+  a.download = 'tablero_visitas_' + id + (DF.loc ? '_' + DF.loc.replace(/\s+/g, '_') : '') + '.csv'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+// barras horizontales apiladas (Pagar / No pagar)
+function hbars(groups, unitWord, opts = {}) {
+  const max = Math.max(1, ...groups.map(g => g.n));
+  const rows = groups.map(g => {
+    const lab = opts.label ? opts.label(g.k) : g.k;
+    const tip = `<b>${esc(lab)}</b><br>${fmtN(g.n)} ${unitWord}<br>Pagar: ${fmtN(g.pay)} (${pct(g.pay, g.n)})<br>No pagar: ${fmtN(g.nopay)} (${pct(g.nopay, g.n)})`;
+    const segs = opts.single ? `<div class="seg-b fill-${opts.single}" style="width:${100 * g.n / max}%"></div>` :
+      [['pay', g.pay], ['nopay', g.nopay]].filter(([, n]) => n > 0).map(([c, n]) => `<div class="seg-b fill-${c}" style="width:calc(${100 * n / max}% - 1px)"></div>`).join('');
+    const cls = opts.sel ? (opts.sel === g.k ? ' sel' : opts.selActive ? ' dim' : '') : '';
+    const val = opts.single ? `${fmtN(g.n)} <small>· ${pct(g.n, opts.total)}</small>` : `${fmtN(g.n)} <small>· ${pct(g.nopay, g.n)} no pagar</small>`;
+    return `<div class="row${cls}" data-tip="${esc(opts.tip ? opts.tip(g, lab) : tip)}"${opts.click ? ` data-loc="${esc(g.k)}"` : ''}>
+      <div class="lab" title="${esc(lab)}">${esc(lab)}</div><div class="track">${segs}</div><div class="val">${val}</div></div>`;
+  }).join('');
+  return `<div class="hb${opts.click ? ' click' : ''}">${rows}</div>`;
+}
+
+function niceMax(v) { if (v <= 5) return 5; const p = Math.pow(10, Math.floor(Math.log10(v))); const m = v / p; return (m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10) * p; }
+// columnas apiladas
+function vcols(groups, unitWord, labelFn, opts = {}) {
+  const top = niceMax(Math.max(1, ...groups.map(g => g.n)));
+  const ticks = [0, .25, .5, .75, 1].map(f => f * top);
+  const grid = ticks.map(t => `<div class="gl${t === 0 ? ' base' : ''}" style="bottom:${100 * t / top}%"><span>${fmtN(Math.round(t))}</span></div>`).join('');
+  const cols = groups.map(g => {
+    const segs = [['pay', g.pay], ['nopay', g.nopay]].filter(([, n]) => n > 0);
+    const html = segs.map(([c, n], i) => `<div class="s fill-${c}${i === segs.length - 1 ? ' top' : ''}" style="height:calc(${100 * n / top}% - ${segs.length > 1 ? 1 : 0}px)"></div>`).join('');
+    const tip = `<b>${esc(opts.tipTitle ? opts.tipTitle(g) : labelFn(g))}</b><br>${fmtN(g.n)} ${unitWord}<br>Pagar: ${fmtN(g.pay)} (${pct(g.pay, g.n)})<br>No pagar: ${fmtN(g.nopay)} (${pct(g.nopay, g.n)})`;
+    return `<div class="col" data-tip="${esc(tip)}">${html}</div>`;
+  }).join('');
+  const every = Math.ceil(groups.length / 14);
+  const xl = groups.map((g, i) => `<span>${i % every === 0 ? esc(labelFn(g)) : ''}</span>`).join('');
+  const refs = (opts.refs || []).map(r => `<div class="ref" style="left:${r.pos}%"><span>${esc(r.label)}</span></div>`).join('');
+  return `<div class="vc">${grid}<div class="cols">${cols}</div>${refs}</div><div class="xl">${xl}</div>`;
+}
+
+const LEGEND = `<div class="legend"><span><i class="sw-pay"></i>Recomendación PAGAR</span><span><i class="sw-nopay"></i>Recomendación NO PAGAR</span></div>`;
+
+function renderDash() {
+  const el = $('#dash'); if (!el) return;
+  if (!VPREP.length) {
+    $('#fNote').textContent = '';
+    el.innerHTML = `<div class="msg" style="margin-top:16px">No hay consolidado de visitas cargado. Use <b>Datos cargados / actualizar</b> y seleccione el archivo del consolidado de visitas domiciliarias.</div>`;
+    return;
+  }
+  const noLoc = VPREP.every(v => v.res === 'SIN DATO' && v.col === 'SIN DATO');
+  const dated = byDate();
+  const all = toUnit(dated);                                 // sin filtro de localidad (para el gráfico por localidad)
+  const list = DF.loc ? all.filter(v => locOf(v) === DF.loc) : all;
+  const U = DF.unit === 'vis' ? 'visitas' : 'beneficiarios';
+  const u1 = DF.unit === 'vis' ? 'visita' : 'beneficiario';
+  const n = list.length;
+  const docs = new Set(list.map(v => v.doc)).size;
+  const nPay = list.filter(v => v.pay).length, nNo = list.filter(v => v.nopay).length;
+  const nEf = list.filter(v => v.efectiva).length;
+  const nDist = list.filter(v => v.distNo).length;
+  const ds = list.map(v => v.dist).filter(x => x != null && x >= 0).sort((a, b) => a - b);
+  const med = ds.length ? ds[Math.floor(ds.length / 2)] : null;
+  const avg = ds.length ? ds.reduce((t, x) => t + x, 0) / ds.length : null;
+  const rev = DF.unit === 'vis' ? list.filter(v => v.num >= 2).length : 0;
+  const multi = DF.unit === 'ben' ? (() => { const c = new Map(); dated.filter(v => !DF.loc || locOf(v) === DF.loc).forEach(v => c.set(v.doc, (c.get(v.doc) || 0) + 1)); return [...c.values()].filter(x => x > 1).length; })() : 0;
+  const ts = list.map(v => v.t).filter(Boolean);
+  const dmin = ts.length ? new Date(Math.min(...ts)) : null, dmax = ts.length ? new Date(Math.max(...ts)) : null;
+  const fd = d => d ? d.toLocaleDateString('es-CO', {day: '2-digit', month: 'short', year: 'numeric'}) : '—';
+  const where = DF.loc ? `${titleCase(DF.loc)} (localidad de ${DF.by === 'col' ? 'colegio' : 'residencia'})` : 'Todas las localidades';
+  $('#fNote').innerHTML = `Mostrando <b>${esc(where)}</b> · ${fmtN(n)} ${U} · visitas entre ${fd(dmin)} y ${fd(dmax)}` +
+    (DF.unit === 'ben' ? ' · cada beneficiario se cuenta con su última visita' : '') +
+    (noLoc ? ' · <span style="color:var(--bad)">El consolidado cargado no trae la localidad: vuelva a cargarlo para filtrar.</span>' : '');
+  if (!n) { el.innerHTML = `<div class="msg" style="margin-top:16px">No hay ${U} con los filtros seleccionados.</div>`; return; }
+
+  const kpis = `<div class="kpis">
+    <div class="kpi"><div class="k">${DF.unit === 'vis' ? 'Visitas realizadas' : 'Beneficiarios visitados'}</div><div class="v">${fmtN(n)}</div>
+      <div class="s">${DF.unit === 'vis' ? fmtN(docs) + ' beneficiarios distintos' : fmtN(multi) + ' con más de una visita'}</div></div>
+    <div class="kpi"><div class="k">Visitas efectivas</div><div class="v">${fmtN(nEf)}<span class="pct">${pct(nEf, n)}</span></div>
+      <div class="s">${fmtN(n - nEf)} no efectivas (ausente, rechazada u otra dirección)</div></div>
+    <div class="kpi k-ok"><div class="k"><span class="ico" style="color:var(--ok)">✓</span>Recomendación PAGAR</div><div class="v">${fmtN(nPay)}<span class="pct">${pct(nPay, n)}</span></div>
+      <div class="s">sujeto a verificación en liquidación</div></div>
+    <div class="kpi k-bad"><div class="k"><span class="ico" style="color:var(--bad)">✕</span>Recomendación NO PAGAR</div><div class="v">${fmtN(nNo)}<span class="pct">${pct(nNo, n)}</span></div>
+      <div class="s">no cumple criterios</div></div>
+    <div class="kpi"><div class="k">No cumplen la distancia</div><div class="v">${fmtN(nDist)}<span class="pct">${pct(nDist, n)}</span></div>
+      <div class="s">menos de 2 km (o de 1 km si aplica)</div></div>
+    <div class="kpi"><div class="k">Distancia casa – sede (mediana)</div><div class="v">${med == null ? '—' : km(med)}</div>
+      <div class="s">${avg == null ? '' : 'promedio ' + km(avg)}</div></div>
+    ${DF.unit === 'vis' ? `<div class="kpi"><div class="k">Revisitas (2.ª visita o más)</div><div class="v">${fmtN(rev)}</div><div class="s">${pct(rev, n)} de las visitas</div></div>` : ''}
+  </div>`;
+
+  // semana
+  const wk = stackGroups(list.filter(v => v.semana != null), v => v.semana, (a, b) => a.k - b.k);
+  const perOf = new Map(); list.forEach(v => { if (v.semana != null && !perOf.has(v.semana)) perOf.set(v.semana, v.periodo); });
+  const cWeek = `<section class="card wide"><h2>${U[0].toUpperCase() + U.slice(1)} por semana</h2>
+    <div class="sub2">Semana del consolidado según la fecha de la visita${DF.unit === 'ben' ? ' (última visita de cada beneficiario)' : ''}.</div>${LEGEND}
+    ${vcols(wk, U, g => 'S' + g.k, {tipTitle: g => `Semana ${g.k} · ${perOf.get(g.k) || ''}`})}
+    ${tableHtml('semana', ['Semana', 'Periodo', U, 'Pagar', 'No pagar', '% no pagar'], wk.map(g => ['Semana ' + g.k, perOf.get(g.k) || '', g.n, g.pay, g.nopay, pct(g.nopay, g.n)]))}</section>`;
+
+  // resultado
+  const TIPOS = ['Atendida', 'Vive en dirección diferente', 'Ausente', 'Rechazada'];
+  const tg = stackGroups(list, v => v.tipo, (a, b) => (TIPOS.indexOf(a.k) + 1 || 99) - (TIPOS.indexOf(b.k) + 1 || 99));
+  const cTipo = `<section class="card"><h2>Resultado de la visita</h2><div class="sub2">Tipo de visita registrado por el verificador.</div>${LEGEND}
+    ${hbars(tg, U)}${tableHtml('resultado', ['Resultado', U, 'Pagar', 'No pagar', '% del total'], tg.map(g => [g.k, g.n, g.pay, g.nopay, pct(g.n, n)]))}</section>`;
+
+  // motivos de no pago
+  const MOT = ['No cumple la distancia', 'No vive en la dirección registrada', 'No se pudo verificar (visita no efectiva)', 'Otra causa'];
+  const mg = stackGroups(list.filter(v => v.nopay), v => v.motivo, (a, b) => MOT.indexOf(a.k) - MOT.indexOf(b.k));
+  const cMot = `<section class="card"><h2>Motivo de NO PAGAR</h2><div class="sub2">${fmtN(nNo)} ${U} con recomendación NO PAGAR, según la georreferenciación.</div>
+    ${mg.length ? hbars(mg, U, {single: 'nopay', total: nNo, tip: (g, lab) => `<b>${esc(lab)}</b><br>${fmtN(g.n)} ${U} · ${pct(g.n, nNo)} de los NO PAGAR`}) : '<div class="empty">Sin recomendaciones NO PAGAR.</div>'}
+    ${tableHtml('motivo', ['Motivo', U, '% de NO PAGAR'], mg.map(g => [g.k, g.n, pct(g.n, nNo)]))}
+    <div class="hint" style="margin:10px 0 0">Cuando hay varias causas se toma la primera: verificación, luego residencia, luego distancia.</div></section>`;
+
+  // localidad (ignora el filtro de localidad; resalta la seleccionada)
+  const lg = stackGroups(all, locOf);
+  const cLoc = `<section class="card wide"><h2>${U[0].toUpperCase() + U.slice(1)} por localidad de ${DF.by === 'col' ? 'colegio' : 'residencia'}</h2>
+    <div class="sub2">Todas las localidades con los demás filtros aplicados. Clic en una localidad para filtrar el tablero; clic de nuevo para quitar el filtro.</div>${LEGEND}
+    ${hbars(lg, U, {click: true, sel: DF.loc || null, selActive: !!DF.loc, label: titleCase})}
+    ${tableHtml('localidad', ['Localidad', U, 'Pagar', 'No pagar', '% no pagar', 'Efectivas', 'No cumple distancia'],
+      lg.map(g => { const s = all.filter(v => locOf(v) === g.k); return [titleCase(g.k), g.n, g.pay, g.nopay, pct(g.nopay, g.n), s.filter(v => v.efectiva).length, s.filter(v => v.distNo).length]; }))}</section>`;
+
+  // distancia
+  const BINS = [[0, 1, '< 1'], [1, 2, '1–2'], [2, 3, '2–3'], [3, 4, '3–4'], [4, 5, '4–5'], [5, 7, '5–7'], [7, 10, '7–10'], [10, Infinity, '> 10']];
+  const dg = BINS.map(([a, b, l]) => { const s = list.filter(v => v.dist != null && v.dist >= a && v.dist < b); return {k: l, n: s.length, pay: s.filter(v => v.pay).length, nopay: s.filter(v => v.nopay).length}; });
+  const sinDist = list.filter(v => v.dist == null).length;
+  const cDist = `<section class="card"><h2>Distancia casa – sede medida en la visita</h2><div class="sub2">Kilómetros${sinDist ? ` · ${fmtN(sinDist)} sin distancia registrada` : ''}. Umbral: 2 km (1 km para preescolar o discapacidad).</div>${LEGEND}
+    ${vcols(dg, U, g => g.k, {tipTitle: g => g.k + ' km', refs: [{pos: 12.5, label: '1 km'}, {pos: 25, label: '2 km'}]})}
+    <div class="hint" style="margin:4px 0 0;text-align:center">Rango de distancia (km)</div>
+    ${tableHtml('distancia', ['Rango (km)', U, 'Pagar', 'No pagar'], dg.map(g => [g.k, g.n, g.pay, g.nopay]))}</section>`;
+
+  // origen
+  const og = stackGroups(list, v => v.origen);
+  const cOri = `<section class="card"><h2>Origen de la visita</h2><div class="sub2">Visita inicial, reprogramaciones y solicitudes (PQR).</div>${LEGEND}
+    ${hbars(og, U)}${tableHtml('origen', ['Origen', U, 'Pagar', 'No pagar', '% del total'], og.map(g => [g.k, g.n, g.pay, g.nopay, pct(g.n, n)]))}</section>`;
+
+  el.innerHTML = kpis.replace('<div class="kpis">','<div class="kpis dk">') + `<div class="dash-grid">${cWeek}${cTipo}${cMot}${cLoc}${cDist}${cOri}</div>`;
+}
+
+// ---------- mapa de la vivienda ----------
+const TILE_BASE = 'https://serviciosgis.catastrobogota.gov.co/arcgis/rest/services/Mapa_Referencia/';
+const okXY = v => v && typeof v.lat === 'number' && typeof v.lon === 'number' && v.lat > 3.5 && v.lat < 5.5 && v.lon > -75 && v.lon < -73;
+function haversine(a, b) { const R = 6371000, r = x => x * Math.PI / 180; const dLa = r(b[0] - a[0]), dLo = r(b[1] - a[1]);
+  const h = Math.sin(dLa / 2) ** 2 + Math.cos(r(a[0])) * Math.cos(r(b[0])) * Math.sin(dLo / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); }
+let MAP = null;
+function sedeOf(vis, e) {
+  for (let i = vis.length - 1; i >= 0; i--) { const d = vis[i].daneSede; if (d && SEDES[d]) return {dane: d, xy: SEDES[d], dir: vis[i].dirSede, colegio: vis[i].colegio, sede: vis[i].sede}; }
+  if (e && e.dane && SEDES[e.dane]) return {dane: e.dane, xy: SEDES[e.dane], dir: '', colegio: e.colegio, sede: e.sede};
+  return null;
+}
+function renderMap(doc, vis, e) {
+  if (!vis.length) return '';
+  const pts = vis.filter(okXY);
+  const hasField = vis.some(v => 'lat' in v);
+  const last = vis[vis.length - 1];
+  if (!pts.length) {
+    const why = !hasField || vis.every(v => v.lat == null) ? (DATA.visitas && !(DATA.visitas.rows.fields || []).includes('lat') ?
+      'El consolidado de visitas se cargó con una versión anterior. Vuelva a cargarlo en <b>Datos cargados / actualizar</b> para ver el mapa.' : 'La visita no tiene coordenada registrada.') : 'La coordenada registrada está por fuera de Bogotá.';
+    return `<section class="card"><h2>Ubicación de la vivienda</h2><div class="msg">${why}</div></section>`;
+  }
+  const lp = pts[pts.length - 1];
+  const s = sedeOf(vis, e);
+  const recta = s ? haversine([lp.lat, lp.lon], s.xy) : null;
+  const info = [
+    ['Dirección registrada (beneficio)', last.dirBen], ['Dirección donde se hizo la visita', lp.dirVisita],
+    ['Coordenada registrada', `${lp.lat.toFixed(6)}, ${lp.lon.toFixed(6)}` + (pts.length > 1 ? ` (visita ${lp.num || pts.length})` : '')],
+    ['Sede de matrícula', s ? `${s.sede || s.colegio || ''}${s.dir ? ' · ' + s.dir : ''}` : 'Sin coordenada de la sede'],
+    ['Distancia en línea recta a la sede', recta == null ? '—' : km(recta / 1000)],
+    ['Distancia medida en la visita (peatonal)', km(lp.distancia)],
+  ];
+  return `<section class="card"><h2>Ubicación de la vivienda <span class="count">coordenada tomada en la visita</span></h2>
+    <div class="maptools"><div class="seg" id="mapLayer"><button type="button" data-v="mapa" aria-pressed="true">Mapa</button><button type="button" data-v="hib" aria-pressed="false">Satélite</button></div>
+      <div class="maplegend"><span><i style="background:#2F6BA8;border-radius:50%"></i>Vivienda · visita PAGAR</span><span><i style="background:#CB4F3E;border-radius:50%"></i>Vivienda · visita NO PAGAR</span>${s ? '<span><i style="background:#E39A48;border-radius:3px"></i>Sede de matrícula</span>' : ''}</div></div>
+    <div class="mapwrap"><div id="map" role="img" aria-label="Mapa con la ubicación de la vivienda y la sede"></div></div>
+    <div class="mapinfo">${info.map(([k, v]) => `<div><div class="k">${k}</div><div class="v">${v ? esc(v) : '—'}</div></div>`).join('')}</div>
+    <div class="hint" style="margin:10px 0 0">Mapa base: Mapas Bogotá (IDECA). El número del marcador es el número de la visita. La línea punteada une la vivienda con la sede en línea recta; la distancia del subsidio es peatonal y siempre es mayor.</div>
+  </section>`;
+}
+function initMap(vis, e) {
+  if (MAP) { MAP.remove(); MAP = null; }
+  const el = document.getElementById('map'); if (!el || typeof L === 'undefined') return;
+  const pts = vis.filter(okXY); if (!pts.length) return;
+  MAP = L.map(el, {zoomControl: true, attributionControl: true, scrollWheelZoom: false});
+  MAP.attributionControl.setPrefix(false);
+  const opt = {maxZoom: 20, maxNativeZoom: 19, attribution: 'Mapas Bogotá · IDECA', referrerPolicy: 'no-referrer'};
+  const layers = {mapa: L.tileLayer(TILE_BASE + 'mapa_base_3857/MapServer/tile/{z}/{y}/{x}', opt), hib: L.tileLayer(TILE_BASE + 'mapa_hibrido/MapServer/tile/{z}/{y}/{x}', opt)};
+  layers.mapa.addTo(MAP);
+  $('#mapLayer').addEventListener('click', ev => { const b = ev.target.closest('button'); if (!b) return;
+    Object.entries(layers).forEach(([k, l]) => { if (k === b.dataset.v) l.addTo(MAP); else MAP.removeLayer(l); });
+    $('#mapLayer').querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false')); });
+  const bounds = [];
+  pts.forEach((v, i) => {
+    const cls = isNoPay(v.recom) ? 'nopay' : 'pay';
+    const icon = L.divIcon({className: '', html: `<div class="pin ${cls}"><span>${esc(v.num || i + 1)}</span></div>`, iconSize: [26, 26], iconAnchor: [13, 30], popupAnchor: [0, -28]});
+    L.marker([v.lat, v.lon], {icon, zIndexOffset: 100 + i, title: 'Visita ' + (v.num || i + 1)}).addTo(MAP).bindPopup(
+      `<b>Visita ${esc(v.num || i + 1)}</b> · ${esc(v.fecha)}<br>${esc(v.tipoVisita || '')} · ${esc(isNoPay(v.recom) ? 'NO PAGAR' : isPay(v.recom) ? 'PAGAR' : (v.recom || ''))}<br>` +
+      `Dirección de la visita: ${esc(v.dirVisita || '—')}<br>Dirección registrada: ${esc(v.dirBen || '—')}<br>Coordenada: ${v.lat.toFixed(6)}, ${v.lon.toFixed(6)}<br>Distancia medida: ${km(v.distancia)}`);
+    bounds.push([v.lat, v.lon]);
+  });
+  const s = sedeOf(vis, e);
+  if (s) {
+    const lp = pts[pts.length - 1];
+    const icon = L.divIcon({className: '', html: '<div class="pin-sede">S</div>', iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -14]});
+    L.marker(s.xy, {icon, title: 'Sede de matrícula'}).addTo(MAP).bindPopup(`<b>Sede de matrícula</b><br>${esc(s.colegio || '')}<br>${esc(s.sede || '')}<br>${esc(s.dir || '')}<br>DANE ${esc(s.dane)}`);
+    L.polyline([[lp.lat, lp.lon], s.xy], {color: '#1F4E7E', weight: 2, dashArray: '6 6', opacity: .85}).addTo(MAP)
+      .bindTooltip('Línea recta: ' + km(haversine([lp.lat, lp.lon], s.xy) / 1000), {sticky: true});
+    bounds.push(s.xy);
+  }
+  if (bounds.length > 1) MAP.fitBounds(bounds, {padding: [40, 40], maxZoom: 17}); else MAP.setView(bounds[0], 17);
+}
+
+// ---------- fuentes y carga de archivos ----------
+function renderSources() {
+  const fd = iso => { try { return iso ? new Date(iso).toLocaleString('es-CO', {day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'}) : '—'; } catch (e) { return '—'; } };
+  const st = (ok, txtOk, txtNo) => ok ? `<span class="chip ok">✓ ${txtOk}</span>` : `<span class="chip warn">! ${txtNo}</span>`;
+  const srcs = [...DATA.sources].sort((a, b) => Math.min(...Object.keys(a.lotes).map(loteOrder)) - Math.min(...Object.keys(b.lotes).map(loteOrder)));
+  $('#st-liq').innerHTML = st(srcs.length, srcs.length + (srcs.length === 1 ? ' archivo' : ' archivos'), 'Sin cargar');
+  $('#list-liq').innerHTML = srcs.length ? `<div class="tablewrap"><table><thead><tr><th>Archivo</th><th>Lotes</th><th class="n">Registros</th><th>Cargado</th><th></th></tr></thead><tbody>${
+    srcs.map(x => `<tr><td><b>${esc(x.name)}</b></td><td>${Object.entries(x.lotes).map(([k, n]) => esc(k) + ' (' + n.toLocaleString('es-CO') + ')').join('<br>')}</td>
+      <td class="n">${x.n.toLocaleString('es-CO')}</td><td>${fd(x.cargado)}</td><td><button type="button" class="mini" data-rm="liq" data-name="${esc(x.name)}">Quitar</button></td></tr>`).join('')}</tbody></table></div>` :
+    '<p class="none">Aún no hay liquidaciones cargadas.</p>';
+  // visitas
+  const v = DATA.visitas;
+  let vw = '';
+  if (v) {
+    const f = v.rows.fields || [];
+    if (!f.includes('loc')) vw += '<div class="warnline">! Cargado con una versión anterior: no tiene localidad. Vuelva a cargarlo para usar el filtro del tablero.</div>';
+    else if (!f.includes('lat')) vw += '<div class="warnline">! Cargado con una versión anterior: no tiene coordenadas. Vuelva a cargarlo para ver el mapa de la vivienda.</div>';
+  }
+  $('#st-vis').innerHTML = st(v, v ? v.n.toLocaleString('es-CO') + ' visitas' : '', 'Sin cargar');
+  $('#list-vis').innerHTML = v ? `<div class="tablewrap"><table><thead><tr><th>Archivo</th><th class="n">Visitas</th><th class="n">Beneficiarios</th><th>Cargado</th><th></th></tr></thead><tbody>
+      <tr><td><b>${esc(v.name)}</b></td><td class="n">${v.n.toLocaleString('es-CO')}</td><td class="n">${VIS.size.toLocaleString('es-CO')}</td><td>${fd(v.cargado)}</td><td><button type="button" class="mini" data-rm="vis">Quitar</button></td></tr></tbody></table></div>${vw}` :
+    '<p class="none">Aún no hay consolidado de visitas.</p>';
+  const p = DATA.pagos;
+  $('#st-pag').innerHTML = st(p, p ? p.n.toLocaleString('es-CO') + ' registros' : '', 'Sin cargar');
+  $('#list-pag').innerHTML = p ? `<div class="tablewrap"><table><thead><tr><th>Archivo</th><th class="n">Registros</th><th>Cargado</th><th></th></tr></thead><tbody>
+      <tr><td><b>${esc(p.name)}</b></td><td class="n">${p.n.toLocaleString('es-CO')}</td><td>${fd(p.cargado)}</td><td><button type="button" class="mini" data-rm="pag">Quitar</button></td></tr></tbody></table></div>` :
+    '<p class="none">Aún no hay consolidado de pagos.</p>';
+}
+const log = m => { const l = $('#log'); l.textContent += m + '\n'; l.scrollTop = l.scrollHeight; };
+const tick = () => new Promise(r => setTimeout(r, 30));
+const KIND_NAME = {liq: 'una liquidación', vis: 'un consolidado de visitas', pag: 'un consolidado de pagos'};
+
+async function saveAndRefresh(msg) {
+  buildIndex();
+  const ok = await idbSet('data', {base: EMB_GEN, data: DATA});
+  log(ok ? msg + ' Los cambios quedan guardados en este navegador.' : msg + ' (No se pudieron guardar en el navegador; se perderán al cerrar.)');
+  if (currentView === 'consulta' && $('#q').value) search($('#q').value);
+}
+
+async function loadFiles(files, expected) {
+  let changed = 0;
+  for (const f of files) {
+    try {
+      log(`Leyendo ${f.name}…`); await tick();
+      const buf = await f.arrayBuffer();
+      const wb = XLSX.read(buf, {type: 'array', dense: true});
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, {header: 1, raw: true, defval: null});
+      await tick();
+      const kind = STE.detectKind(rows);
+      if (!kind) { log(`  ✗ ${f.name} no se reconoce: no es una liquidación, ni un consolidado de visitas, ni un consolidado de pagos. Revise que sea la primera hoja y que tenga los encabezados originales.`); continue; }
+      if (expected && kind !== expected) { log(`  ✗ ${f.name} es ${KIND_NAME[kind]}, no ${KIND_NAME[expected]}. No se cargó; use la casilla correspondiente.`); continue; }
+      if (kind === 'pag') {
+        const pg = STE.extractPagos(rows);
+        DATA.pagos = {name: f.name, n: pg.length, cargado: new Date().toISOString(), rows: STE.pack(pg, STE.PAG_FIELDS)};
+        log(`  ✓ Consolidado de pagos: ${pg.length.toLocaleString('es-CO')} registros (reemplaza al anterior).`);
+      } else if (kind === 'liq') {
+        const res = STE.extractLiquidacion(rows, f.name);
+        const estMap = new Map();
+        res.rows.forEach(r => estMap.set(r.doc, Object.assign({doc: r.doc, lote: r.lote}, r.est)));
+        const newLotes = Object.keys(res.lotes);
+        const before = DATA.sources.length;
+        DATA.sources = DATA.sources.filter(s => !Object.keys(s.lotes).some(l => newLotes.includes(l)) && s.name !== f.name);
+        if (DATA.sources.length < before) log(`  Se reemplazó la versión anterior de ${newLotes.join(', ')}.`);
+        DATA.sources.push({type: 'liq', name: f.name, lotes: res.lotes, n: res.rows.length, cargado: new Date().toISOString(),
+          rows: STE.pack(res.rows, STE.LIQ_FIELDS), est: STE.pack([...estMap.values()], STE.EST_FIELDS)});
+        log(`  ✓ Liquidación: ${res.rows.length.toLocaleString('es-CO')} registros (${newLotes.join(', ')}).`);
+      } else {
+        const v = STE.extractVisitas(rows);
+        DATA.visitas = {name: f.name, n: v.length, cargado: new Date().toISOString(), rows: STE.pack(v, STE.VIS_FIELDS)};
+        const sinXY = v.filter(x => x.lat == null || x.lon == null).length;
+        log(`  ✓ Consolidado de visitas: ${v.length.toLocaleString('es-CO')} visitas (reemplaza al anterior)${sinXY ? ` · ${sinXY.toLocaleString('es-CO')} sin coordenada` : ''}.`);
+      }
+      changed++;
+    } catch (e) { log(`  ✗ Error con ${f.name}: ${e.message}`); }
+  }
+  if (changed) await saveAndRefresh('Listo.');
+}
+
+async function removeData(kind, name) {
+  if (kind === 'liq') DATA.sources = DATA.sources.filter(s => s.name !== name);
+  if (kind === 'vis') DATA.visitas = null;
+  if (kind === 'pag') DATA.pagos = null;
+  await saveAndRefresh(`Se quitó ${kind === 'liq' ? name : kind === 'vis' ? 'el consolidado de visitas' : 'el consolidado de pagos'}.`);
+}
+
+// ---------- arranque ----------
+(async function init() {
+  try {
+    const emb = await decodeEmbedded();
+    EMB_GEN = emb.generado;
+    const saved = await idbGet('data');
+    if (saved && saved.base === EMB_GEN && saved.data) DATA = saved.data; else DATA = emb;
+    buildIndex();
+  } catch (e) {
+    $('#loadingText').textContent = 'No se pudieron cargar los datos: ' + e.message + '. Use Chrome o Edge actualizados.';
+    return;
+  }
+  $('#loading').remove();
+  if (WEB) $('#btnReset').textContent = 'Borrar datos de este navegador';
+  initNav(); initDash();
+  $('#form').addEventListener('submit', ev => { ev.preventDefault(); search($('#q').value); });
+  $('#btnDatos').addEventListener('click', () => $('#dlg').showModal());
+  $('#dlgClose').addEventListener('click', () => $('#dlg').close());
+  $('#file').addEventListener('change', ev => { const fs = [...ev.target.files]; ev.target.value = ''; if (fs.length) loadFiles(fs); });
+  document.querySelectorAll('input[type=file][data-kind]').forEach(inp => inp.addEventListener('change', ev => { const fs = [...ev.target.files]; ev.target.value = ''; if (fs.length) loadFiles(fs, inp.dataset.kind); }));
+  $('#dlg').addEventListener('click', ev => { const b = ev.target.closest('[data-rm]'); if (b) removeData(b.dataset.rm, b.dataset.name); });
+  const drop = $('#drop');
+  ['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('on'); }));
+  ['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('on'); }));
+  drop.addEventListener('drop', e => { const fs = [...e.dataTransfer.files]; if (fs.length) loadFiles(fs); });
+  $('#btnReset').addEventListener('click', async () => {
+    await idbDel('data'); DATA = await decodeEmbedded(); buildIndex(); $('#log').textContent = WEB ? 'Se borraron los datos guardados en este navegador.\n' : 'Se restauraron los datos originales.\n';
+    if ($('#q').value) search($('#q').value);
+  });
+  const p = new URLSearchParams(location.search).get('doc');
+  if (p) { $('#q').value = p; showView('consulta'); search(p); }
+})();
+</script>
+</body>
+</html>
