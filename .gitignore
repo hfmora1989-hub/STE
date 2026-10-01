@@ -1,0 +1,5 @@
+node_modules/
+*.xlsx
+*.xls
+data.b64
+*.png
