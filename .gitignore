@@ -4,3 +4,4 @@ node_modules/
 data.b64
 *.png
 *.bundle
+.firebase/
