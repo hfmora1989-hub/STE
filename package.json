@@ -1,0 +1,17 @@
+{
+  "name": "ste2026-consulta-local",
+  "version": "1.1.0",
+  "private": true,
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "build": "node scripts/build.cjs",
+    "test": "node --test test/*.test.cjs",
+    "verify": "node scripts/verify.cjs",
+    "check": "npm run build && npm test && npm run verify",
+    "preview": "node scripts/preview.cjs"
+  },
+  "dependencies": {
+    "leaflet": "1.9.4",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  }
+}

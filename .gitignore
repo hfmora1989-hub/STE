@@ -1,7 +1,10 @@
 node_modules/
+.npm-cache/
+.firebase/
 *.xlsx
 *.xls
-data.b64
-*.png
+*.xlsm
+*.b64
 *.bundle
-.firebase/
+private/
+test-output/
