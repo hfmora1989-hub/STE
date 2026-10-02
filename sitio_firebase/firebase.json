@@ -9,6 +9,13 @@
     "cleanUrls": true,
     "rewrites": [
       {
+        "source": "/api/**",
+        "function": {
+          "functionId": "steApi",
+          "region": "us-central1"
+        }
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
@@ -43,7 +50,7 @@
           },
           {
             "key": "Content-Security-Policy",
-            "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://serviciosgis.catastrobogota.gov.co; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+            "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
           }
         ]
       },
@@ -60,5 +67,20 @@
     "predeploy": [
       "node ../scripts/verify.cjs"
     ]
-  }
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "ste-secure",
+      "runtime": "nodejs22",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "*.log",
+        ".env*",
+        ".secret*"
+      ]
+    }
+  ],
+  "storage": [{"target":"ste-private","rules":"storage.rules"}]
 }

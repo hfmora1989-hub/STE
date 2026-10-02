@@ -1,5 +1,6 @@
 {
   "projects": {
     "default": "ste2026-app"
-  }
+  },
+  "targets": {"ste2026-app": {"storage": {"ste-private": ["ste2026-app-ste-private"]}}}
 }

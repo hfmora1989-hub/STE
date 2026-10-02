@@ -32,19 +32,29 @@
       "sha256": "c69df81f2a01d4101659e9e53f4f7cd985c6a59c3bfe97047c585594b80148f5"
     },
     {
-      "file": "assets/app.72539206b11d2911.js",
-      "bytes": 57640,
-      "sha256": "72539206b11d29116defa9317a52ed939743dcd0795db03a1a42d82b665edf96"
+      "file": "assets/auth.bdc90bef2e86e7ae.js",
+      "bytes": 141759,
+      "sha256": "bdc90bef2e86e7ae62edf0d317649736dbdfd594a3b8c4a6672e26855e30c360"
     },
     {
-      "file": "assets/styles.db58dd790fea320a.css",
-      "bytes": 35962,
-      "sha256": "db58dd790fea320a88d957b60576f4dd654df2e1a7ca6f67ae09fde457f92fed"
+      "file": "assets/app.d111a8a4b02cc813.js",
+      "bytes": 47322,
+      "sha256": "d111a8a4b02cc8133f331dbcc1f9bb07e83ff115d5645c010c14c60639b5b7d7"
+    },
+    {
+      "file": "assets/secure.653aa6481454dd59.js",
+      "bytes": 12311,
+      "sha256": "653aa6481454dd59115536a93eefb5dbbf4a8826f5519e51056ebeafa1b1f9b4"
+    },
+    {
+      "file": "assets/styles.a05c8995ec1722de.css",
+      "bytes": 36398,
+      "sha256": "a05c8995ec1722de2d76a3d72d9c18f468bd20d89cb66cfde44b9d15b73a840d"
     },
     {
       "file": "index.html",
-      "bytes": 30532,
-      "sha256": "f50345100c677728e0551f3a9e72abd3b72070a00f57f798f5654c7c6cf87418"
+      "bytes": 32236,
+      "sha256": "6805600a466d02b48ac3a5aa2ce6c34406dab382946de75c589f6fbcead87d18"
     },
     {
       "file": "robots.txt",

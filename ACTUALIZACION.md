@@ -1,3 +1,9 @@
+# Documento anterior — no usar para publicar la versión 2.0
+
+**Siga [ACTUALIZACION-SEGURA.md](ACTUALIZACION-SEGURA.md).** Esta guía anterior se conserva como historial; no incluye la API, las cuentas ni la migración cifrada requeridas por la versión actual.
+
+---
+
 # Actualizar STE en Firebase Hosting
 
 Versión preparada: 1.1.0 · Proyecto: `ste2026-app` · Sitio: https://ste2026-app.web.app/
@@ -119,3 +125,8 @@ Edite exclusivamente `src`. Ejecute `npm.cmd run check`, pruebe localmente y pub
 La CSP permite scripts únicamente del propio sitio; no vuelva a añadir scripts inline. Las bibliotecas y hojas de estilo públicas pueden cachearse por su nombre con hash. El HTML continúa sin caché persistente.
 
 Referencias oficiales: [configuración y cabeceras de Hosting](https://firebase.google.com/docs/hosting/full-config), [versiones y canales](https://firebase.google.com/docs/hosting/manage-hosting-resources), [instalación oficial de SheetJS](https://docs.sheetjs.com/docs/getting-started/installation/nodejs/).
+# Documento anterior — no usar para publicar la versión 2.0
+
+**Siga [ACTUALIZACION-SEGURA.md](ACTUALIZACION-SEGURA.md).** Esta guía anterior se conserva como historial; no incluye la API, las cuentas ni la migración cifrada requeridas por la versión actual.
+
+---

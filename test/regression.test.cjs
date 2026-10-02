@@ -23,7 +23,18 @@ function harness(){
   vm.runInContext(code,context);
   const run=s=>vm.runInContext(s,context,{timeout:3000});
   run("buildIndex=()=>{}; idbSet=async()=>true; DATA={sources:[],visitas:null,pagos:null}; EMB_GEN='web-v1';");
-  return {context,run,elements,async load(f,kind){context.fixture=f;context.kind=kind;await run('loadFiles([fixture],kind)');}};
+  let queue=Promise.resolve();
+  return {context,run,elements,load(f,kind){
+    const next=queue.then(async()=>{
+      try{
+        Core.validateFile(f);
+        const wb=XLSX.read(await f.arrayBuffer(),{type:'array',dense:true,sheetRows:Core.MAX_ROWS+16});
+        const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,raw:true,defval:null});
+        const gzip=require('node:zlib').gzipSync(JSON.stringify({rows,name:f.name,expected:kind})).toString('base64');
+        context.imported=require('../functions/data.cjs').upload(run('DATA'),{gzip});run('DATA=imported');
+      }catch{}
+    });queue=next;return next;
+  }};
 }
 test('Mediana: vacío, unitario, impar, par y orden independiente',()=>{
   assert.equal(Core.median([]),null);assert.equal(Core.median([4]),4);assert.equal(Core.median([9,1,5]),5);assert.equal(Core.median([1,9]),5);assert.equal(Core.median([5.574,6.587]),6.0805);

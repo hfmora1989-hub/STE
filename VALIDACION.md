@@ -1,3 +1,9 @@
+# Evidencia anterior de la versión 1.1
+
+**La validación vigente está en [VALIDACION-SEGURA.md](VALIDACION-SEGURA.md).** La evidencia siguiente corresponde a la versión anterior sin usuarios ni base compartida.
+
+---
+
 # Validación local — 1 de octubre de 2026
 
 Se trabajó en una copia nueva. El repositorio original y sus archivos publicados permanecen sin cambios. No se ejecutó Firebase deploy, no se alteraron permisos y no se subieron bases de beneficiarios.
@@ -23,3 +29,8 @@ Se trabajó en una copia nueva. El repositorio original y sus archivos publicado
 - Contener versiones históricas o copias ya distribuidas requiere revisión del administrador; no se hicieron borrados administrativos.
 
 La carpeta `test-output` contiene únicamente ejemplos y capturas ficticias locales; no se publica ni forma parte del ZIP de distribución.
+# Evidencia anterior de la versión 1.1
+
+**La validación vigente está en [VALIDACION-SEGURA.md](VALIDACION-SEGURA.md).** La evidencia siguiente corresponde a la versión anterior sin usuarios ni base compartida.
+
+---

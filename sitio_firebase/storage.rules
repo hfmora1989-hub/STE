@@ -1,0 +1,7 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Acceso solo desde el servicio de backend mediante IAM; ningún SDK cliente.
+    match /{path=**} { allow read, write: if false; }
+  }
+}

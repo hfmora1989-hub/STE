@@ -6,9 +6,32 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Consulta beneficiarios STE</title>
 <!--__STYLES__-->
-<style>/*__LEAFLETCSS__*/</style>
 </head>
 <body>
+<section id="authPanel" class="auth-panel card" aria-labelledby="authTitle">
+  <h1 id="authTitle">Consulta STE · Acceso autorizado</h1>
+  <p>Ingrese con su cuenta para consultar la base compartida.</p>
+  <form id="loginForm">
+    <label>Correo <input id="email" type="email" autocomplete="username" required></label>
+    <label>Contraseña <input id="password" type="password" autocomplete="current-password" required></label>
+    <button id="loginButton" class="primary" type="submit">Ingresar</button>
+    <button id="resetPassword" type="button">Recuperar contraseña</button>
+  </form>
+  <div id="onboarding" hidden>
+    <button id="verifyEmail" type="button">Enviar verificación de correo</button>
+    <button id="refreshEmail" type="button">Ya verifiqué mi correo</button>
+    <form id="passwordForm" hidden>
+      <p>Use al menos 12 caracteres: mayúscula, minúscula, número y símbolo.</p>
+      <label>Nueva contraseña <input id="newPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label>
+      <label>Repetir contraseña <input id="confirmPassword" type="password" autocomplete="new-password" minlength="12" maxlength="128" required></label>
+      <button class="primary" type="submit">Cambiar contraseña</button>
+    </form>
+    <button id="cancelLogin" type="button">Volver al inicio</button>
+  </div>
+  <p id="authMessage" role="status" aria-live="polite"></p>
+</section>
+<div id="accountPanel" class="account-panel" hidden><span id="accountEmail"></span> <button id="logout" type="button">Cerrar sesión</button></div>
+<div id="workspace" hidden>
 <div class="loading" id="loading"><div class="spin"></div><div id="loadingText">Cargando datos…</div></div>
 
 <header class="top">
@@ -104,7 +127,7 @@
         <li>En <b>Tablero de visitas</b> vea las cifras generales y filtre por localidad, unidad de conteo y fechas.</li>
         <li>En <b>Consulta por documento</b> digite el número del estudiante para ver sus visitas, su liquidación por ciclo y el estado de cobro.</li>
       </ol>
-      <p class="hint" style="margin:0">Los archivos se procesan y guardan en este navegador. El mapa solicita imágenes a Mapas Bogotá. Use un equipo de confianza y borre los datos locales al terminar si es compartido.</p>
+      <p class="hint" style="margin:0">La base compartida se guarda cifrada. Las consultas requieren una cuenta autorizada. Cierre sesión al terminar.</p>
     </section>
   </div>
 </div>
@@ -139,7 +162,7 @@
 <dialog id="dlg">
   <div class="dlg-h"><h3>Datos cargados</h3><button id="dlgClose" type="button">Cerrar</button></div>
   <div class="dlg-b">
-    <p class="dlg-intro">Cargue los archivos en este orden. Cada casilla acepta solo su tipo de archivo; si selecciona uno equivocado, se le avisa y no se carga. Los archivos se procesan en este equipo; el mapa solicita imágenes a Mapas Bogotá. Límite por archivo: 50 MB y 200.000 registros. Los archivos inválidos conservan los datos anteriores.</p>
+    <p class="dlg-intro">Cargue los archivos en este orden. Cada casilla acepta solo su tipo de archivo; si selecciona uno equivocado, se le avisa y no se carga. Los archivos se validan en el equipo y en el servidor; la base compartida se guarda cifrada. Límite por archivo: 50 MB y 200.000 registros. Los archivos inválidos conservan los datos anteriores.</p>
     <div class="slots">
       <section class="slot" id="slot-liq">
         <div class="slot-h"><span class="stepn">1</span><div class="slot-t"><b>Liquidaciones por ciclo</b>
@@ -168,11 +191,12 @@
     </label>
     <div class="log" id="log" role="status" aria-live="polite"></div>
     <div class="row-actions">
-      <button id="btnReset" type="button">Borrar datos de este navegador</button>
+      <p>Las cargas reemplazan el consolidado del tipo seleccionado y quedan disponibles para las cuatro cuentas autorizadas.</p>
     </div>
   </div>
 </dialog>
 
+</div>
 <!--__SCRIPTS__-->
 </body>
 </html>

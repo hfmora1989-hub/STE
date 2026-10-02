@@ -4,6 +4,8 @@ const root=path.resolve(__dirname,'..'),pub=path.join(root,'sitio_firebase/publi
 const hash=bytes=>crypto.createHash('sha256').update(bytes).digest('hex');
 const sources=name=>fs.readFileSync(path.join(root,'src',name),'utf8');
 function build() {
+  const shared=path.join(root,'functions/shared');fs.mkdirSync(shared,{recursive:true});for(const name of ['extract.js','core.js'])fs.copyFileSync(path.join(root,'src',name),path.join(shared,name));
+  const auth=require('esbuild').buildSync({entryPoints:[path.join(root,'src/auth.js')],bundle:true,write:false,format:'iife',minify:true,target:'es2020'}).outputFiles[0].text;
   const files=new Map();
   const asset=(name,content)=>{const ext=path.extname(name),base=path.basename(name,ext);const target=`assets/${base}.${hash(content).slice(0,16)}${ext}`;files.set(target,Buffer.from(content));return target;};
   const xlsxVersion=require('xlsx').version;
@@ -14,7 +16,7 @@ function build() {
   leafletCss=leafletCss.replace(/url\((?:["']?)(images\/[^)'" ]+)(?:["']?)\)/g,(_,file)=>'url(data:image/png;base64,'+fs.readFileSync(path.join(path.dirname(require.resolve('leaflet/dist/leaflet.css')),file)).toString('base64')+')');
   const sedes=JSON.parse(sources('sedes.json'));
   if(!Object.entries(sedes).every(([key,xy])=>/^\d+$/.test(key)&&Array.isArray(xy)&&xy.length===2&&xy.every(Number.isFinite)))throw Error('El catálogo de sedes tiene contenido inesperado.');
-  const scripts=[['xlsx.js',vendorXlsx],['leaflet.js',vendorLeaflet],['extract.js',sources('extract.js')],['core.js',sources('core.js')],['sedes.js','const SEDES = '+JSON.stringify(sedes)+';'],['app.js',sources('app.js')]];
+  const scripts=[['xlsx.js',vendorXlsx],['leaflet.js',vendorLeaflet],['extract.js',sources('extract.js')],['core.js',sources('core.js')],['sedes.js','const SEDES = '+JSON.stringify(sedes)+';'],['auth.js',auth],['app.js',sources('app.js')],['secure.js',sources('secure.js')]];
   for(const [name,code] of scripts)new vm.Script(code,{filename:name});
   const tags=scripts.map(([name,code])=>`<script defer src="/${asset(name,code)}"></script>`).join('\n');
   const css=asset('styles.css',leafletCss+'\n'+sources('styles.css'));

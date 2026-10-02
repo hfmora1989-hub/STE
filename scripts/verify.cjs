@@ -24,6 +24,10 @@ function verify(project=root){
   const csp=config.hosting.headers.flatMap(h=>h.headers).find(h=>h.key==='Content-Security-Policy')?.value||'';
   if(!/script-src 'self'(?:;|$)/.test(csp))throw Error('CSP de scripts no es estricta.');
   if(!config.hosting.predeploy?.some(c=>c.includes('verify.cjs')))throw Error('Falta comprobación previa a publicar.');
+  if(!html.includes('id="workspace" hidden')||!html.includes('id="loginForm"'))throw Error('Falta la pantalla de acceso.');
+  if(!config.hosting.rewrites.some(r=>r.source==='/api/**'&&r.function?.functionId==='steApi'))throw Error('Falta la API privada.');
+  const rules=fs.readFileSync(path.join(project,'sitio_firebase/storage.rules'),'utf8');
+  if(!/allow read, write: if false/.test(rules)||/if true/.test(rules))throw Error('Storage debe denegar todo acceso cliente.');
   console.log('Verificación correcta: archivos previstos, hashes íntegros, sin paquete de beneficiarios y scripts externos.');
   return true;
 }

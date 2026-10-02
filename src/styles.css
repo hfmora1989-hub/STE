@@ -213,3 +213,6 @@ details.tbl .tablewrap{max-height:320px;overflow:auto}
 @media (max-width:860px){ .dash-grid{grid-template-columns:1fr} }
 @media (max-width:640px){ nav.tabs .in{padding:0 8px} .hb{grid-template-columns:minmax(90px,130px) 1fr auto}  main{padding:14px 12px 40px} header.top{padding:12px} .search{flex-wrap:wrap} .search label{width:100%} }
 @media print{ header.top button,.search,.hint{display:none} section.card,.kpi{box-shadow:none} }
+
+[hidden]{display:none!important}.auth-panel{max-width:560px;margin:8vh auto;padding:28px}.auth-panel label{display:block;margin:16px 0}.auth-panel input{display:block;width:100%;padding:10px}.auth-panel button{margin:8px 8px 0 0}.account-panel{text-align:right;padding:12px 24px}
+@media print{#workspace,#accountPanel{display:none!important}body::after{content:"Contenido privado. Consulte la aplicación con una cuenta autorizada."}}

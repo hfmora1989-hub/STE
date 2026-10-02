@@ -1,4 +1,12 @@
-# STE — versión local corregida 1.1.0
+# STE — versión 2.0.0: acceso y base compartida cifrada
+
+**La documentación vigente es [ACTUALIZACION-SEGURA.md](ACTUALIZACION-SEGURA.md), [SEGURIDAD.md](SEGURIDAD.md) y [VALIDACION-SEGURA.md](VALIDACION-SEGURA.md).** Se prepararon localmente autenticación por correo, cuatro usuarios autorizados y una copia cifrada de la base existente. No se han creado cuentas en Firebase ni publicado esta versión.
+
+El contenido siguiente se conserva como historial de la versión 1.1.0. Su descripción de carga local, mapas y ausencia de usuarios ya no corresponde a la aplicación actual. No siga sus instrucciones de publicación.
+
+---
+
+# Historial: versión local corregida 1.1.0
 
 Esta carpeta contiene la versión corregida del sitio `ste2026-app`. No se ha publicado ni modificado el proyecto original.
 
