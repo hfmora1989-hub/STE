@@ -16,11 +16,12 @@ function build() {
   leafletCss=leafletCss.replace(/url\((?:["']?)(images\/[^)'" ]+)(?:["']?)\)/g,(_,file)=>'url(data:image/png;base64,'+fs.readFileSync(path.join(path.dirname(require.resolve('leaflet/dist/leaflet.css')),file)).toString('base64')+')');
   const sedes=JSON.parse(sources('sedes.json'));
   if(!Object.entries(sedes).every(([key,xy])=>/^\d+$/.test(key)&&Array.isArray(xy)&&xy.length===2&&xy.every(Number.isFinite)))throw Error('El catálogo de sedes tiene contenido inesperado.');
-  const scripts=[['xlsx.js',vendorXlsx],['leaflet.js',vendorLeaflet],['extract.js',sources('extract.js')],['core.js',sources('core.js')],['sedes.js','const SEDES = '+JSON.stringify(sedes)+';'],['auth.js',auth],['app.js',sources('app.js')],['secure.js',sources('secure.js')]];
+  const scripts=[['xlsx.js',vendorXlsx],['leaflet.js',vendorLeaflet],['extract.js',sources('extract.js')],['core.js',sources('core.js')],['sedes.js','const SEDES = '+JSON.stringify(sedes)+';'],['auth.js',auth],['app.js',sources('app.js')],['ied.js',sources('ied.js')],['secure.js',sources('secure.js')]];
   for(const [name,code] of scripts)new vm.Script(code,{filename:name});
   const tags=scripts.map(([name,code])=>`<script defer src="/${asset(name,code)}"></script>`).join('\n');
   const css=asset('styles.css',leafletCss+'\n'+sources('styles.css'));
-  const html=sources('template.html').replace('<!--__STYLES__-->',`<link rel="stylesheet" href="/${css}">`).replace('<!--__SCRIPTS__-->',tags);
+  const logo=asset('consorcio.png',fs.readFileSync(path.join(root,'src/consorcio.png')));
+  const html=sources('template.html').replace('<!--__STYLES__-->',`<link rel="stylesheet" href="/${css}">`).replace('<!--__SCRIPTS__-->',tags).replace('/__CONSORCIO_PNG__','/'+logo);
   if(/__DATA__|EMBEDDED_B64|<script(?![^>]*\bsrc=)/i.test(html)||html.length>150000)throw Error('La página debe ser estática, pequeña y sin datos embebidos.');
   files.set('index.html',Buffer.from(html));files.set('robots.txt',Buffer.from('User-agent: *\nDisallow: /\n'));
   const entries=[...files].map(([file,body])=>({file,bytes:body.length,sha256:hash(body)}));
@@ -31,7 +32,7 @@ function build() {
     for(const entry of previous.files){
       if(files.has(entry.file))continue;
       const resolved=path.resolve(pub,entry.file);
-      if(!resolved.startsWith(pub+path.sep)||!/^(assets\/[a-z]+\.[a-f0-9]{16}\.(js|css)|index\.html|robots\.txt)$/.test(entry.file))throw Error('Ruta inesperada en manifiesto anterior.');
+      if(!resolved.startsWith(pub+path.sep)||!/^(assets\/[a-z]+\.[a-f0-9]{16}\.(js|css|png)|index\.html|robots\.txt)$/.test(entry.file))throw Error('Ruta inesperada en manifiesto anterior.');
       if(fs.existsSync(resolved)){
         if(hash(fs.readFileSync(resolved))!==entry.sha256)throw Error('Hay un artefacto anterior modificado. Revíselo antes de construir.');
         fs.unlinkSync(resolved);

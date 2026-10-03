@@ -5,13 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Consulta beneficiarios STE</title>
-<link rel="stylesheet" href="/assets/styles.a05c8995ec1722de.css">
+<link rel="stylesheet" href="/assets/styles.f7ff86406b1400b4.css">
 </head>
 <body>
 <section id="authPanel" class="auth-panel card" aria-labelledby="authTitle">
-  <div style="text-align:center;margin-bottom:20px;">
-    <img src="/assets/consorcio.png" alt="Consorcio CSC Movi Escolar 25" style="max-height:85px;max-width:100%;height:auto;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.08));">
-  </div>
+  <div class="auth-logo"><img src="/assets/consorcio.8ac83a97e9c4183e.png" alt="Consorcio CSC Movi Escolar 25"></div>
   <h1 id="authTitle">Consulta STE · Acceso autorizado</h1>
   <p>Ingrese con su cuenta para consultar la base compartida.</p>
   <form id="loginForm">
@@ -50,6 +48,7 @@
   <button role="tab" data-view="info" aria-selected="true">Información general</button>
   <button role="tab" data-view="tablero" aria-selected="false">Tablero de visitas</button>
   <button role="tab" data-view="consulta" aria-selected="false">Consulta por documento</button>
+  <button role="tab" data-view="ied" aria-selected="false">Visitas IED</button>
 </div></nav>
 
 <main>
@@ -126,9 +125,10 @@
     <section class="card">
       <h2>Cómo usar esta herramienta</h2>
       <ol class="steps">
-        <li>Cargue los archivos con <b>Datos cargados / actualizar</b>: liquidaciones de cada ciclo, consolidado de visitas y consolidado de pagos.</li>
+        <li>Cargue los archivos con <b>Datos cargados / actualizar</b>: liquidaciones de cada ciclo, consolidado de visitas, consolidado de pagos y visitas a IED.</li>
         <li>En <b>Tablero de visitas</b> vea las cifras generales y filtre por localidad, unidad de conteo y fechas.</li>
         <li>En <b>Consulta por documento</b> digite el número del estudiante para ver sus visitas, su liquidación por ciclo y el estado de cobro.</li>
+        <li>En <b>Visitas IED</b> revise la programación y el resultado de las visitas de verificación a los colegios, por localidad, mes, estado e integrante del equipo.</li>
       </ol>
       <p class="hint" style="margin:0">La base compartida se guarda cifrada. Las consultas requieren una cuenta autorizada. Cierre sesión al terminar.</p>
     </section>
@@ -159,6 +159,20 @@
   <div class="hint">Busca en las liquidaciones de cada ciclo, en el consolidado de pagos y en el consolidado de visitas domiciliarias. Clic en una fila de la liquidación para ver el detalle.</div>
   <div id="out" aria-live="polite"></div>
 </div>
+
+<!-- ================= VISITAS IED ================= -->
+<div class="view" id="v-ied" hidden>
+  <div class="filters" id="iFilters">
+    <label class="f"><span>Localidad</span><select id="iLoc"><option value="">Todas las localidades</option></select></label>
+    <label class="f"><span>Mes</span><select id="iMes"><option value="">Todos los meses</option></select></label>
+    <label class="f"><span>Estado</span><select id="iEst"><option value="">Todos los estados</option></select></label>
+    <label class="f"><span>Integrante</span><select id="iInt"><option value="">Todo el equipo</option></select></label>
+    <label class="f"><span>Colegio o DANE</span><input id="iQ" type="search" placeholder="Buscar IED" autocomplete="off"></label>
+    <div class="f"><span>&nbsp;</span><button type="button" id="iClear">Limpiar filtros</button></div>
+    <div class="note" id="iNote" role="status" aria-live="polite"></div>
+  </div>
+  <div id="iedOut"></div>
+</div>
 </main>
 <div id="tip" role="tooltip"></div>
 
@@ -188,6 +202,13 @@
         <div id="list-pag"></div>
         <label class="btn-file">Cargar o reemplazar pagos<input type="file" data-kind="pag" accept=".xlsx,.xls,.xlsm" hidden></label>
       </section>
+      <section class="slot" id="slot-ied">
+        <div class="slot-h"><span class="stepn">4</span><div class="slot-t"><b>Visitas a IED</b>
+          <div class="desc">Archivo único (ej. Visitas_IED_2026.xlsx). Se lee la hoja PROGRAMACION (NOMBRE IED, CODIGO DANE, #VISITA / #STICKER, FECHA_PROGRAMADA, ESTADO, LOCALIDAD) y, si existe, la hoja MATRIZ con los aspectos validados en cada visita. Un archivo nuevo reemplaza al anterior.</div></div>
+          <span class="slot-st" id="st-ied"></span></div>
+        <div id="list-ied"></div>
+        <label class="btn-file">Cargar o reemplazar visitas IED<input type="file" data-kind="ied" accept=".xlsx,.xls,.xlsm" hidden></label>
+      </section>
     </div>
     <label class="drop" id="drop">¿Tiene varios archivos a la vez? Arrástrelos aquí o <u>haga clic</u>; cada uno se reconoce y se ubica en su casilla.
       <input type="file" id="file" accept=".xlsx,.xls,.xlsm" multiple hidden>
@@ -202,11 +223,12 @@
 </div>
 <script defer src="/assets/xlsx.cc015130aa8521e7.js"></script>
 <script defer src="/assets/leaflet.dc71f8a6880bc3ca.js"></script>
-<script defer src="/assets/extract.90f7ca751194134c.js"></script>
-<script defer src="/assets/core.978a11f511efae65.js"></script>
+<script defer src="/assets/extract.e59bbb26fe92d8bb.js"></script>
+<script defer src="/assets/core.c48133de62f4315d.js"></script>
 <script defer src="/assets/sedes.c69df81f2a01d410.js"></script>
 <script defer src="/assets/auth.bdc90bef2e86e7ae.js"></script>
-<script defer src="/assets/app.d111a8a4b02cc813.js"></script>
-<script defer src="/assets/secure.653aa6481454dd59.js"></script>
+<script defer src="/assets/app.a3ae913d22fd32e1.js"></script>
+<script defer src="/assets/ied.2164d2c90e142ca0.js"></script>
+<script defer src="/assets/secure.844214badc539436.js"></script>
 </body>
 </html>

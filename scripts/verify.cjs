@@ -11,9 +11,10 @@ function verify(project=root){
   const actual=walk(publicPath).sort(),expected=manifest.files.map(e=>e.file).sort();
   if(JSON.stringify(actual)!==JSON.stringify(expected))throw Error('Public contiene archivos no previstos o faltantes. No publique Excel, copias HTML ni datos personales.');
   for(const e of manifest.files){
-    if(!/^(assets\/[a-z]+\.[a-f0-9]{16}\.(js|css)|index\.html|robots\.txt)$/.test(e.file))throw Error('Archivo no permitido: '+e.file);
+    if(!/^(assets\/[a-z]+\.[a-f0-9]{16}\.(js|css|png)|index\.html|robots\.txt)$/.test(e.file))throw Error('Archivo no permitido: '+e.file);
     const bytes=fs.readFileSync(path.join(publicPath,e.file));
     if(bytes.length!==e.bytes||crypto.createHash('sha256').update(bytes).digest('hex')!==e.sha256)throw Error('Artefacto modificado: '+e.file);
+    if(e.file.endsWith('.png')){if(bytes.subarray(0,8).toString('hex')!=='89504e470d0a1a0a')throw Error('Imagen no válida: '+e.file);continue;}
     const text=bytes.toString('utf8');
     if(/EMBEDDED_B64|__DATA__|H4sIA[A-Za-z0-9+/]{100}/.test(text))throw Error('Se detectó un marcador de paquete de datos.');
     if(/"(?:doc|nombre|dirBen|dirVisita)"\s*:\s*"[^"\n]+"/.test(text))throw Error('Posible registro individual en el artefacto.');

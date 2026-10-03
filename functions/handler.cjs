@@ -8,7 +8,7 @@ function createHandler({auth,store,keys,auditKey,audit=()=>{}}) {
     let user;
     try {
       if(req.method!=='POST')throw S.fail(405,'Método no permitido.');
-      if(!['session','password','metadata','dashboard','consult','upload'].includes(action))throw S.fail(404,'Ruta inexistente.');
+      if(!['session','password','metadata','dashboard','consult','upload','ied'].includes(action))throw S.fail(404,'Ruta inexistente.');
       const origin=req.get('origin');
       if(origin&&!['https://ste2026-app.web.app','https://ste2026-app.firebaseapp.com'].includes(origin))throw S.fail(403,'Origen no permitido.');
       if(!/^application\/json(?:;|$)/i.test(req.get('content-type')||''))throw S.fail(415,'Se requiere JSON.');
@@ -40,6 +40,7 @@ function createHandler({auth,store,keys,auditKey,audit=()=>{}}) {
       if(action==='metadata')result=D.metadata(data);
       if(action==='dashboard')result=D.dashboard(data,req.body);
       if(action==='consult')result=D.consult(data,req.body?.doc);
+      if(action==='ied')result=D.ied(data);
       if(action==='upload'){
         const next=D.upload(data,req.body||{});
         await store.write(S.encrypt(next,keys),loaded?.generation||0);

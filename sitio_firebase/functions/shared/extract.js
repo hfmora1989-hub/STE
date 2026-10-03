@@ -261,8 +261,95 @@ var STE = (function () {
   }
   var PAG_FIELDS = ['doc', 'pid', 'lote', 'cicloAb', 'est', 'raz', 'fa', 'fi', 'ff', 'fmr', 'fc', 'medio', 'val', 'sub', 'dec'];
 
-  function detectKind(rows) { return isPagos(rows) ? 'pag' : isLiquidacion(rows) ? 'liq' : isVisitas(rows) ? 'vis' : null; }
+  // ---------- Visitas a IED (hoja PROGRAMACION + hoja MATRIZ del libro Visitas_IED) ----------
+  var IED_SIG = ['NOMBRE IED', '#VISITA / #STICKER', 'FECHA_PROGRAMADA', 'ESTADO'];
+  var IEDM_SIG = ['Sticker', 'Dane', 'Institución educativa'];
+  function isIED(rows) { return findHeaderRow(rows, IED_SIG) >= 0; }
+  function isIEDMatriz(rows) { return findHeaderRow(rows, IEDM_SIG) >= 0; }
+  function upTxt(v) { return txt(v).replace(/\s+/g, ' ').trim().toUpperCase(); }
+  function extractIED(rows) {
+    var h = findHeaderRow(rows, IED_SIG);
+    if (h < 0) throw new Error('El archivo no tiene la hoja PROGRAMACION de visitas a IED.');
+    var idx = headerIndex(rows[h]);
+    var C = function (n) { return col(idx, n); };
+    var c = {
+      ied: C('NOMBRE IED'), numVisita: C('# VISITA'), ultInterv: C('ULTIMA VISITA INTERVENTORIA'), dane: C('CODIGO DANE'),
+      benef: C('BENEFICIARIOS BASE'), loc: C('LOCALIDAD'), sede: C('NOMBRE SEDE'), dir: C('DIRECCIÓN'),
+      x: C('COORDENADA X'), y: C('COORDENADA Y'), rector: C('RECTOR'), sticker: C('#VISITA / #STICKER'), semana: C('SEMANA'),
+      fecha: C('FECHA_PROGRAMADA'), jornada: C('JORNADA'), equipo: C('EQUIPO'), int1: C('INTEGRANTE 1'), int2: C('INTEGRANTE 2'),
+      estado: C('ESTADO'), acta: C('ACTA ENVIADA'), correo: C('CORREO'), mes: C('MES')
+    };
+    var g = function (r, i) { return i >= 0 ? r[i] : null; };
+    var out = [];
+    for (var i = h + 1; i < rows.length; i++) {
+      var r = rows[i];
+      if (!r) continue;
+      var sticker = normDoc(g(r, c.sticker)), dane = normDoc(g(r, c.dane));
+      if (!sticker && !dane) continue;
+      out.push({
+        sticker: sticker, dane: dane, ied: txt(g(r, c.ied)), sede: txt(g(r, c.sede)), loc: upTxt(g(r, c.loc)),
+        dir: txt(g(r, c.dir)), lon: num(g(r, c.x)), lat: num(g(r, c.y)), rector: txt(g(r, c.rector)), correo: txt(g(r, c.correo)),
+        numVisita: txt(g(r, c.numVisita)), ultInterv: excelDate(g(r, c.ultInterv)), benef: num(g(r, c.benef)),
+        semana: txt(g(r, c.semana)), fecha: excelDate(g(r, c.fecha)), mes: upTxt(g(r, c.mes)), jornada: txt(g(r, c.jornada)),
+        equipo: txt(g(r, c.equipo)), int1: txt(g(r, c.int1)), int2: txt(g(r, c.int2)), estado: upTxt(g(r, c.estado)),
+        acta: txt(g(r, c.acta))
+      });
+    }
+    return out;
+  }
+  // Valores SI/NO de la matriz: se unifican variantes de digitación sin inventar respuestas.
+  function normAnswer(v) {
+    var s = upTxt(v);
+    if (!s || /^[-.]+$/.test(s)) return '';
+    if (s === 'SI' || s === 'SÍ' || s === 'S') return 'SI';
+    if (s === 'NO' || s === 'N') return 'NO';
+    if (/^PARCIAL/.test(s)) return 'PARCIALMENTE';
+    if (/^NO APLICA$/.test(s)) return 'NO APLICA';
+    return 'OTRO';
+  }
+  function extractIEDMatriz(rows) {
+    var h = findHeaderRow(rows, IEDM_SIG);
+    if (h < 0) return {labels: [], rows: []};
+    var header = rows[h];
+    var idx = headerIndex(header);
+    var C = function (n) { return col(idx, n); };
+    var aspects = [];
+    header.forEach(function (name, i) {
+      var k = norm(name);
+      var isAsp = k.indexOf(norm('ASPECTO A VALIDAR')) === 0 || k.indexOf(norm('Se realizo entrega de documentos')) === 0;
+      if (!isAsp) return;
+      var next = header[i + 1];
+      aspects.push({
+        label: String(name).replace(/^\s*ASPECTO A VALIDAR:\s*/i, '').replace(/\s+/g, ' ').trim(),
+        col: i, hall: (next == null || String(next).trim() === '') ? i + 1 : -1
+      });
+    });
+    var c = { sticker: C('Sticker'), dane: C('Dane'), ied: C('Institución educativa'), benFoto: C('Cantidad beneficiarios STE - Colegio FOTO'),
+      benSed: C('Cantidad beneficiarios STE (Según base de datos de la SED)'), efectiva: C('Visita efectiva'), obs: C('Observaciones'), semana: C('Semana') };
+    var g = function (r, i) { return i >= 0 ? r[i] : null; };
+    var out = [];
+    for (var i = h + 1; i < rows.length; i++) {
+      var r = rows[i];
+      if (!r) continue;
+      var sticker = normDoc(g(r, c.sticker));
+      // La fila de subtítulos (SI/NO, Cuantifique hallazgos) y las filas vacías no son visitas.
+      if (!/^\d+$/.test(sticker) || !normDoc(g(r, c.dane))) continue;
+      out.push({
+        sticker: sticker, dane: normDoc(g(r, c.dane)), efectiva: normAnswer(g(r, c.efectiva)),
+        benFoto: num(g(r, c.benFoto)), benSed: num(g(r, c.benSed)), obs: txt(g(r, c.obs)), semana: txt(g(r, c.semana)),
+        asp: aspects.map(function (a) { return normAnswer(g(r, a.col)); }).join('|'),
+        hall: aspects.map(function (a) { var n = a.hall >= 0 ? num(g(r, a.hall)) : null; return n == null ? '' : String(n); }).join('|')
+      });
+    }
+    return {labels: aspects.map(function (a) { return a.label; }), rows: out};
+  }
+  var IED_FIELDS = ['sticker', 'dane', 'ied', 'sede', 'loc', 'dir', 'lon', 'lat', 'rector', 'correo', 'numVisita', 'ultInterv', 'benef',
+    'semana', 'fecha', 'mes', 'jornada', 'equipo', 'int1', 'int2', 'estado', 'acta'];
+  var IEDM_FIELDS = ['sticker', 'dane', 'efectiva', 'benFoto', 'benSed', 'obs', 'semana', 'asp', 'hall'];
+
+  function detectKind(rows) { return isPagos(rows) ? 'pag' : isLiquidacion(rows) ? 'liq' : isVisitas(rows) ? 'vis' : isIED(rows) ? 'ied' : null; }
   return {
+    isIED: isIED, isIEDMatriz: isIEDMatriz, extractIED: extractIED, extractIEDMatriz: extractIEDMatriz, IED_FIELDS: IED_FIELDS, IEDM_FIELDS: IEDM_FIELDS,
     detectKind: detectKind, norm: norm, isPagos: isPagos, extractPagos: extractPagos, PAG_FIELDS: PAG_FIELDS, normDoc: normDoc, isLiquidacion: isLiquidacion, isVisitas: isVisitas,
     extractLiquidacion: extractLiquidacion, extractVisitas: extractVisitas, pack: pack, unpack: unpack,
     LIQ_FIELDS: LIQ_FIELDS, EST_FIELDS: EST_FIELDS, VIS_FIELDS: VIS_FIELDS

@@ -1,0 +1,3 @@
+# La salida publicable se verifica por hash: Git no debe convertir finales de línea (CRLF/LF).
+sitio_firebase/public/** -text
+build-manifest.json -text

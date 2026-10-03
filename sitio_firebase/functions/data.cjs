@@ -4,21 +4,22 @@ const crypto = require('node:crypto');
 const STE = require('./shared/extract.js');
 const Core = require('./shared/core.js');
 const {fail} = require('./security.cjs');
-const empty = () => ({version:2,sources:[],visitas:null,pagos:null});
+const empty = () => ({version:2,sources:[],visitas:null,pagos:null,ied:null});
 function upload(data, input) {
   if (typeof input.gzip !== 'string' || input.gzip.length > 16*1024*1024 || !/^[A-Za-z0-9+/]+={0,2}$/.test(input.gzip)) throw fail(413,'Carga inválida o demasiado grande.');
   let file;
   try { file = JSON.parse(zlib.gunzipSync(Buffer.from(input.gzip,'base64'),{maxOutputLength:64*1024*1024}).toString()); }
   catch { throw fail(400,'El archivo comprimido es inválido o excede 64 MB.'); }
-  if (!file || typeof file.name !== 'string' || file.name.length > 180 || !/\.(xlsx|xls|xlsm)$/i.test(file.name) || /[\x00-\x1f/\\]/.test(file.name) || !['liq','vis','pag',null].includes(file.expected ?? null) || !Array.isArray(file.rows) || file.rows.length > Core.MAX_ROWS+15) throw fail(400,'Formato inválido.');
+  if (!file || typeof file.name !== 'string' || file.name.length > 180 || !/\.(xlsx|xls|xlsm)$/i.test(file.name) || /[\x00-\x1f/\\]/.test(file.name) || !['liq','vis','pag','ied',null].includes(file.expected ?? null) || !Array.isArray(file.rows) || file.rows.length > Core.MAX_ROWS+15) throw fail(400,'Formato inválido.');
+  if (file.matriz != null && (!Array.isArray(file.matriz) || file.matriz.length > Core.MAX_ROWS+15)) throw fail(400,'Formato inválido.');
   let cells = 0;
-  for (const row of file.rows) {
+  for (const row of [...file.rows, ...(file.matriz||[])]) {
     if (!Array.isArray(row) || row.length > 250) throw fail(400,'Columnas inválidas.');
     cells += row.length;
     if (cells > 8000000 || row.some(c => c !== null && !['string','number','boolean'].includes(typeof c) || typeof c === 'string' && c.length > 4000 || typeof c === 'number' && !Number.isFinite(c))) throw fail(400,'Celdas inválidas o excesivas.');
   }
   let p;
-  try { p = Core.readImport(file.rows,file.name,file.expected); } catch(e) { throw fail(400,e.message); }
+  try { p = Core.readImport(file.rows,file.name,file.expected,file.matriz); } catch(e) { throw fail(400,e.message); }
   const s = {id:crypto.randomUUID(),name:file.name,n:p.records.length,cargado:new Date().toISOString()};
   let next;
   if (p.kind === 'liq') {
@@ -26,16 +27,19 @@ function upload(data, input) {
     p.records.forEach(r=>students.set(r.doc+'|'+r.lote,{...r.est,doc:r.doc,lote:r.lote}));
     Object.assign(s,{type:'liq',lotes:p.lotes,rows:STE.pack(p.records,STE.LIQ_FIELDS),est:STE.pack([...students.values()],STE.EST_FIELDS)});
     next = {...data,sources:Core.replaceLiquidation(data.sources,s)};
+  } else if (p.kind === 'ied') {
+    Object.assign(s,{type:'ied',rows:STE.pack(p.records,STE.IED_FIELDS),matriz:STE.pack(p.matriz.rows,STE.IEDM_FIELDS),labels:p.matriz.labels,nm:p.matriz.rows.length});
+    next = {...data,ied:s};
   } else {
     s.rows = STE.pack(p.records,p.kind==='vis'?STE.VIS_FIELDS:STE.PAG_FIELDS);
     next = {...data,[p.kind==='vis'?'visitas':'pagos']:s};
   }
-  if (next.sources.length > 100 || next.sources.reduce((n,x)=>n+x.n,0)+(next.visitas?.n||0)+(next.pagos?.n||0)>600000) throw fail(413,'La base supera el límite de registros.');
+  if (next.sources.length > 100 || next.sources.reduce((n,x)=>n+x.n,0)+(next.visitas?.n||0)+(next.pagos?.n||0)+(next.ied?.n||0)>600000) throw fail(413,'La base supera el límite de registros.');
   return next;
 }
 function metadata(data) {
-  const meta=s=>s?{name:s.name,n:s.n,cargado:s.cargado,lotes:s.lotes}:null;
-  return {sources:data.sources.map(meta),visitas:meta(data.visitas),pagos:meta(data.pagos)};
+  const meta=s=>s?{name:s.name,n:s.n,cargado:s.cargado,lotes:s.lotes,...(s.type==='ied'?{nm:s.nm}:{})}:null;
+  return {sources:data.sources.map(meta),visitas:meta(data.visitas),pagos:meta(data.pagos),ied:meta(data.ied||null)};
 }
 function consult(data, raw) {
   if (typeof raw !== 'string' || !/^[a-zA-Z0-9.\- ]{3,30}$/.test(raw)) throw fail(400,'Documento inválido.');
@@ -74,4 +78,10 @@ function dashboard(data, f={}) {
   });
   return {locations,locality,distance,reasons,quality:Core.qualitySummary(visits),revisits:visits.filter(v=>Number(v.num)>=2).length,notDistance:visits.filter(v=>/NO CUMPLE, DISTANCIA MENOR/i.test(v.georef||'')).length,n:visits.length,docs:new Set(visits.map(v=>v.doc)).size,pay:visits.filter(v=>/^PAGAR/i.test(v.recom||'')).length,nopay:visits.filter(v=>/^NO PAGAR/i.test(v.recom||'')).length,effective:visits.filter(v=>/^EFECTIVA$/i.test(v.estado||'')).length,median:Core.median(distances),average:distances.length?distances.reduce((n,x)=>n+x,0)/distances.length:null,result:group(visits,v=>v.tipoVisita),origin:group(visits,v=>v.origen),week:group(visits,v=>String(v.semana||'Sin dato'))};
 }
-module.exports={empty,upload,metadata,consult,dashboard};
+// Visitas a IED: información institucional (colegios, fechas, equipo y resultado), sin registros de beneficiarios.
+function ied(data) {
+  const s=data.ied;
+  if(!s)return {name:null,n:0,rows:[],matriz:[],labels:[]};
+  return {name:s.name,n:s.n,cargado:s.cargado,rows:STE.unpack(s.rows),matriz:STE.unpack(s.matriz),labels:s.labels||[]};
+}
+module.exports={empty,upload,metadata,consult,dashboard,ied};

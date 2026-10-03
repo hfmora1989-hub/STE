@@ -289,13 +289,14 @@ function renderVisits(vis) {
 // ---------- navegación ----------
 let currentView = 'info';
 function showView(v) {
-  if (!['info', 'tablero', 'consulta'].includes(v)) v = 'info';
+  if (!['info', 'tablero', 'consulta', 'ied'].includes(v)) v = 'info';
   currentView = v;
   document.querySelectorAll('nav.tabs button').forEach(b => b.setAttribute('aria-selected', b.dataset.view === v ? 'true' : 'false'));
   document.querySelectorAll('.view').forEach(el => { el.hidden = el.id !== 'v-' + v; });
   if (location.hash !== '#' + v) history.replaceState(null, '', '#' + v);
   if (v === 'tablero') renderDash();
   if (v === 'consulta') setTimeout(() => $('#q').focus(), 0);
+  if (v === 'ied' && typeof renderIED === 'function') renderIED();
 }
 function initNav() {
   document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => showView(b.dataset.view)));

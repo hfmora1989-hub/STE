@@ -36,11 +36,36 @@
     if (!/\.(xlsx|xls|xlsm)$/i.test(file.name || '')) throw new Error('Seleccione un archivo Excel (.xlsx, .xls o .xlsm).');
     if (!Number.isFinite(file.size) || file.size <= 0 || file.size > MAX_BYTES) throw new Error('El archivo debe tener contenido y no superar 50 MB.');
   }
-  function readImport(rows, name, expected) {
+  // Visitas a IED: hoja PROGRAMACION (obligatoria) y hoja MATRIZ con el resultado de cada visita (opcional).
+  function readIED(rows, matriz) {
+    const headerAt = rows.slice(0,15).findIndex(r=>STE.isIED([r]));
+    const header = rows[headerAt].map(STE.norm);
+    const required = ['NOMBRE IED','CODIGO DANE','#VISITA / #STICKER','FECHA_PROGRAMADA','ESTADO','LOCALIDAD'];
+    const missing = required.filter(h=>!header.includes(STE.norm(h)));
+    if (missing.length) throw new Error('Faltan columnas obligatorias: ' + missing.join(', ') + '. Se conservaron los datos anteriores.');
+    const sCol = header.indexOf(STE.norm('#VISITA / #STICKER'));
+    const body = rows.slice(headerAt+1).filter(r=>r&&r.some(c=>c!=null&&String(c).trim()!==''));
+    if (body.some(r=>!STE.normDoc(r[sCol]))) throw new Error('Hay visitas programadas sin número de visita / sticker. Corrija el archivo antes de cargarlo.');
+    const records = STE.extractIED(rows);
+    if (!records.length) throw new Error('No hay visitas a IED válidas. Se conservaron los datos anteriores.');
+    const seen = new Set();
+    for (const r of records) { if (seen.has(r.sticker)) throw new Error('El sticker ' + r.sticker + ' está repetido en la programación. Corrija el archivo.'); seen.add(r.sticker); }
+    if (records.some(r=>r.fecha&&!parseDMY(r.fecha))) throw new Error('Hay fechas inválidas en la programación de visitas a IED. Use fechas Excel o DD/MM/AAAA.');
+    let detail = {labels:[],rows:[]};
+    if (Array.isArray(matriz) && matriz.length) {
+      if (matriz.length > MAX_ROWS + 15) throw new Error('La hoja MATRIZ supera el límite de filas.');
+      if (!STE.isIEDMatriz(matriz)) throw new Error('La hoja MATRIZ no tiene los encabezados esperados (Sticker, Dane, Institución educativa).');
+      detail = STE.extractIEDMatriz(matriz);
+      if (detail.labels.length > 60) throw new Error('La hoja MATRIZ tiene demasiados aspectos.');
+    }
+    return {kind:'ied',records,matriz:detail};
+  }
+  function readImport(rows, name, expected, matriz) {
     if (rows.length > MAX_ROWS + 15) throw new Error('El archivo supera el límite de 200.000 filas.');
     const kind = STE.detectKind(rows);
     if (!kind) throw new Error('No se reconoce el formato. Revise la primera hoja y los encabezados originales.');
     if (expected && kind !== expected) throw new Error('El archivo no corresponde al tipo seleccionado. No se reemplazó ningún dato.');
+    if (kind === 'ied') return readIED(rows, matriz);
     const signatures = {liq:['CICLOABONADO','TOTAL_DIAS_A_LIQUIDAR'],vis:['IDENTIFICACIÓN DEL BENEFICIARIO','GEOREFERENCIACIÓN'],pag:['CICLO EN LIQUIDACION','ESTADO DE PAGO']};
     const headerAt = rows.slice(0,15).findIndex(r=>signatures[kind].every(h=>(r||[]).some(c=>STE.norm(c)===STE.norm(h))));
     const header = rows[headerAt].map(STE.norm);

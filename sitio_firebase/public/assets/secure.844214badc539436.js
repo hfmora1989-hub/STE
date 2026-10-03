@@ -11,7 +11,8 @@ function emptyMemory(){
   DATA={version:2,sources:[],visitas:null,pagos:null};LIQ.clear();EST.clear();VIS.clear();PAG.clear();PAGDOC.clear();VISALL=[];VPREP=[];LOTES=[];
   for(const key of Object.keys(TABLES))delete TABLES[key];
   if(MAP){MAP.remove();MAP=null;}
-  ['#out','#dash','#infoData','#log','#list-liq','#list-vis','#list-pag'].forEach(s=>{if($(s))$(s).textContent='';});
+  iedReset();
+  ['#out','#dash','#infoData','#log','#list-liq','#list-vis','#list-pag','#list-ied','#iNote'].forEach(s=>{if($(s))$(s).textContent='';});
   $('#q').value='';$('#dataStatus').textContent='Inicie sesión para consultar la base compartida';
 }
 async function closeSession(){
@@ -24,12 +25,12 @@ function touch(){if(session){clearTimeout(idleTimer);idleTimer=setTimeout(()=>{c
 async function metadata(){
   const e=epoch,m=await api('metadata');if(e!==epoch||!session)return;
   const liq=m.sources.reduce((n,s)=>n+s.n,0);
-  $('#dataStatus').textContent=`Base compartida · ${fmtN(liq)} liquidaciones · ${fmtN(m.visitas?.n||0)} visitas · ${fmtN(m.pagos?.n||0)} pagos`;
+  $('#dataStatus').textContent=`Base compartida · ${fmtN(liq)} liquidaciones · ${fmtN(m.visitas?.n||0)} visitas · ${fmtN(m.pagos?.n||0)} pagos · ${fmtN(m.ied?.n||0)} visitas IED`;
   const show=(id,items)=>{
     $('#st-'+id).textContent=items.length?'Cargado':'Sin cargar';
-    $('#list-'+id).innerHTML=items.length?'<ul>'+items.map(s=>`<li>${esc(s.name)} · ${fmtN(s.n)} registros · ${esc(s.cargado||'')}</li>`).join('')+'</ul>':'<p>Sin archivos cargados.</p>';
+    $('#list-'+id).innerHTML=items.length?'<ul>'+items.map(s=>`<li>${esc(s.name)} · ${fmtN(s.n)} registros${s.nm!=null?` · ${fmtN(s.nm)} con resultado`:''} · ${esc(s.cargado||'')}</li>`).join('')+'</ul>':'<p>Sin archivos cargados.</p>';
   };
-  show('liq',m.sources);show('vis',m.visitas?[m.visitas]:[]);show('pag',m.pagos?[m.pagos]:[]);
+  show('liq',m.sources);show('vis',m.visitas?[m.visitas]:[]);show('pag',m.pagos?[m.pagos]:[]);show('ied',m.ied?[m.ied]:[]);
 }
 // Construir índices únicamente con el expediente individual devuelto por la API.
 buildIndex=function(){
@@ -57,9 +58,8 @@ search=async function(raw){
     originalSearch(raw);
   }catch(err){if(e===epoch&&id===queryEpoch)$('#out').textContent=err.message;}
 };
-// No se envían coordenadas de consultas a proveedores externos de mapas.
-// Mapa de la vivienda habilitado para consulta autorizada
-
+// Mapa de la vivienda habilitado para la consulta autorizada (teselas de Mapas Bogotá permitidas en la CSP).
+iedFetch=()=>session?api('ied'):Promise.reject(Error('Inicie sesión para ver las visitas a IED.'));
 prepDash=function(){};
 renderInfoData=function(){};
 downloadCsv=function(){};
@@ -88,6 +88,33 @@ async function gzip64(value){
   if(bytes.length>12*1024*1024)throw Error('La carga comprimida supera 12 MB. Divida el archivo.');
   let raw='';for(let i=0;i<bytes.length;i+=8192)raw+=String.fromCharCode(...bytes.subarray(i,i+8192));return btoa(raw);
 }
+// Busca la hoja reconocible: la primera hoja (como antes) o, en libros con varias hojas como Visitas_IED, la que tenga los encabezados.
+function sheetRows(book,name){
+  const sheet=book.Sheets[name];if(!sheet)return null;
+  if(sheet['!fullref'])throw Error('La hoja '+name+' tiene demasiadas filas.');
+  const rows=XLSX.utils.sheet_to_json(sheet,{header:1,raw:true,defval:null});
+  let end=rows.length;while(end>0&&!(rows[end-1]||[]).some(c=>c!=null&&String(c).trim()!==''))end--;
+  return rows.slice(0,end);
+}
+function pickSheets(book,expected){
+  const names=book.SheetNames;if(!names.length)throw Error('El libro no tiene hojas.');
+  let rows=null,other=null;
+  for(const name of names){
+    const r=sheetRows(book,name);if(!r||!r.length)continue;
+    const kind=STE.detectKind(r);
+    if(kind&&(!expected||kind===expected)){rows=r;break;}
+    if(kind&&!other)other=r; // otro tipo reconocido: se usa para avisar que no corresponde a la casilla
+  }
+  if(!rows)rows=other||sheetRows(book,names[0])||[];
+  let matriz=null;
+  if(STE.detectKind(rows)==='ied'){
+    const named=names.find(n=>STE.norm(n)==='MATRIZ');
+    for(const name of named?[named,...names.filter(n=>n!==named)]:names){
+      const r=sheetRows(book,name);if(r&&STE.isIEDMatriz(r)){matriz=r;break;}
+    }
+  }
+  return {rows,matriz};
+}
 function loadFiles(files,expected){
   const e=epoch;
   const op=importQueue.then(async()=>{
@@ -96,14 +123,15 @@ function loadFiles(files,expected){
       try{
         STECore.validateFile(file);log('Validando '+file.name+'…');
         const book=XLSX.read(await file.arrayBuffer(),{type:'array',dense:true,sheetRows:STECore.MAX_ROWS+16});
-        const sheet=book.Sheets[book.SheetNames[0]];if(!sheet||sheet['!fullref'])throw Error('Hoja vacía o con demasiadas filas.');
-        const rows=XLSX.utils.sheet_to_json(sheet,{header:1,raw:true,defval:null});
-        STECore.readImport(rows,file.name,expected);
-        const gzip=await gzip64({rows,name:file.name,expected:expected||null});
+        const {rows,matriz}=pickSheets(book,expected);
+        const parsed=STECore.readImport(rows,file.name,expected,matriz);
+        if(parsed.kind==='ied')log(`  Programación: ${fmtN(parsed.records.length)} visitas · resultados en MATRIZ: ${fmtN(parsed.matriz.rows.length)}`);
+        const gzip=await gzip64({rows,name:file.name,expected:expected||null,...(parsed.kind==='ied'&&matriz?{matriz}:{})});
         if(e!==epoch||!session?.upload)return;
         await api('upload',{gzip});
         if(e!==epoch||!session)return;
         log('✓ '+file.name+': guardado cifrado en la base compartida.');await metadata();if(currentView==='tablero')await renderDash();
+        if(parsed.kind==='ied'){IEDS.data=null;if(currentView==='ied')await renderIED(true);}
         DATA={sources:[],visitas:null,pagos:null};buildIndex();$('#out').textContent='La base se actualizó. Consulte de nuevo el documento.';
       }catch(err){if(e===epoch)log('✗ '+file.name+': '+err.message);}
     }
@@ -118,12 +146,12 @@ async function enter(){
   session=s;$('#authPanel').hidden=true;$('#accountPanel').hidden=false;$('#workspace').hidden=false;
   $('#accountEmail').textContent=s.email;$('#btnDatos').hidden=!s.upload;
   touch();sessionTimer=setTimeout(()=>{closeSession();$('#authMessage').textContent='La sesión de 60 minutos terminó. Inicie sesión de nuevo.';},60*60*1000);
-  await metadata();if(currentView==='tablero')await renderDash();
+  await metadata();if(currentView==='tablero')await renderDash();if(currentView==='ied')await renderIED(true);
 }
 (async function initSecure(){
   // Elimina la caché privada creada por versiones anteriores de esta herramienta.
   try{const r=indexedDB.deleteDatabase('consulta-ste');r.onerror=()=>{};}catch{}
-  $('#loading').remove();emptyMemory();initNav();initDash();
+  $('#loading').remove();emptyMemory();initNav();initDash();initIED();
   if(new URLSearchParams(location.search).has('doc'))history.replaceState(null,'',location.pathname+location.hash);
   $('#loginForm').addEventListener('submit',async ev=>{
     ev.preventDefault();const button=$('#loginButton');button.disabled=true;$('#authMessage').textContent='Validando acceso…';

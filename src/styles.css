@@ -216,3 +216,25 @@ details.tbl .tablewrap{max-height:320px;overflow:auto}
 
 [hidden]{display:none!important}.auth-panel{max-width:560px;margin:8vh auto;padding:28px}.auth-panel label{display:block;margin:16px 0}.auth-panel input{display:block;width:100%;padding:10px}.auth-panel button{margin:8px 8px 0 0}.account-panel{text-align:right;padding:12px 24px}
 @media print{#workspace,#accountPanel{display:none!important}body::after{content:"Contenido privado. Consulte la aplicación con una cuenta autorizada."}}
+/* ---------- acceso: logo del consorcio ---------- */
+.auth-logo{text-align:center;margin-bottom:20px}
+.auth-logo img{max-height:85px;max-width:100%;height:auto;object-fit:contain;filter:drop-shadow(0 2px 4px rgba(0,0,0,.08))}
+/* ---------- visitas IED ---------- */
+:root{ --st-ef:#2E7D5B; --st-pr:#2F6BA8; --st-re:#E39A48; --st-ne:#CB4F3E; --st-ot:#8A97A8; }
+@media (prefers-color-scheme: dark){ :root{ --st-ef:#4FB386; --st-pr:#4F8AC9; --st-re:#E9A55C; --st-ne:#E06A57; --st-ot:#7D8A9B; } }
+.st-ef{background:var(--st-ef)} .st-pr{background:var(--st-pr)} .st-re{background:var(--st-re)} .st-ne{background:var(--st-ne)} .st-ot{background:var(--st-ot)}
+.chip.st-chip-ef{background:var(--ok-bg);color:var(--ok)} .chip.st-chip-pr{background:var(--info-bg);color:var(--info)}
+.chip.st-chip-re{background:var(--warn-bg);color:var(--warn)} .chip.st-chip-ne{background:var(--bad-bg);color:var(--bad)} .chip.st-chip-ot{background:var(--soft);color:var(--muted)}
+#v-ied .filters input[type=search]{min-width:200px}
+#iedMap{height:420px;border-radius:10px;border:1px solid var(--line);background:#e8edf2;z-index:0}
+path.iedpt.st-ef{fill:var(--st-ef)} path.iedpt.st-pr{fill:var(--st-pr)} path.iedpt.st-re{fill:var(--st-re)} path.iedpt.st-ne{fill:var(--st-ne)} path.iedpt.st-ot{fill:var(--st-ot)}
+.asp-t td.asp{max-width:520px;min-width:260px}
+.asp-t .pcell{min-width:130px;white-space:nowrap}
+.pbar{display:inline-block;width:70px;height:9px;border-radius:5px;background:var(--soft);overflow:hidden;vertical-align:middle;margin-right:6px}
+.pbar i{display:block;height:100%;background:var(--brand-blue)}
+.ied-t td .more{color:var(--muted);font-size:12px}
+.ied-t tr.det td{background:var(--bg)}
+.ied-t .text{margin-top:10px;padding-top:10px;border-top:1px dashed var(--line)}
+.ied-t .text .k{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted)}
+.asp-l{margin:10px 0 0;padding-left:0;list-style:none;display:grid;gap:4px;font-size:12.5px}
+.asp-l .chip{min-width:62px;text-align:center;margin-right:4px}
