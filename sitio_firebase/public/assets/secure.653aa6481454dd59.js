@@ -58,7 +58,8 @@ search=async function(raw){
   }catch(err){if(e===epoch&&id===queryEpoch)$('#out').textContent=err.message;}
 };
 // No se envían coordenadas de consultas a proveedores externos de mapas.
-renderMap=function(){return '';};initMap=function(){};
+// Mapa de la vivienda habilitado para consulta autorizada
+
 prepDash=function(){};
 renderInfoData=function(){};
 downloadCsv=function(){};

@@ -50,7 +50,7 @@
           },
           {
             "key": "Content-Security-Policy",
-            "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+            "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://serviciosgis.catastrobogota.gov.co https://*.catastrobogota.gov.co https://*.tile.openstreetmap.org https://tile.openstreetmap.org; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://serviciosgis.catastrobogota.gov.co https://*.catastrobogota.gov.co https://*.tile.openstreetmap.org; worker-src 'self' blob:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
           }
         ]
       },
@@ -82,5 +82,10 @@
       ]
     }
   ],
-  "storage": [{"target":"ste-private","rules":"storage.rules"}]
+  "storage": [
+    {
+      "target": "ste-private",
+      "rules": "storage.rules"
+    }
+  ]
 }
